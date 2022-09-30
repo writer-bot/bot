@@ -1,0 +1,32 @@
+{
+  "name": "writer-bot",
+  "version": "4.0.0",
+  "description": "Discord bot for writing servers",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "register": "node ./src/register.js",
+    "dev": "node ./src/register.js && node ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cwarwicker/writer-bot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "discord-bot",
+    "writing"
+  ],
+  "author": "Conn Warwicker",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cwarwicker/writer-bot/issues"
+  },
+  "homepage": "https://github.com/cwarwicker/writer-bot#readme",
+  "dependencies": {
+    "@discordjs/rest": "^1.2.0",
+    "discord.js": "^14.5.0",
+    "dotenv": "^16.0.3"
+  }
+}
