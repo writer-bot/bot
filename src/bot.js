@@ -8,11 +8,19 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-client.command_path = path.join(__dirname, 'commands');
 
-for (const file of fs.readdirSync(client.command_path).filter(file => file.endsWith('.js'))) {
-    const command = require(path.join(client.command_path, file));
-    client.commands.set(command.data.name, command);
+const dirpath = path.join(__dirname, 'commands');
+
+for (const dir of fs.readdirSync(dirpath, {withFileTypes: true}).filter(item => item.isDirectory()).map(item => item.name)) {
+
+    const commandpath = path.join(dirpath, dir);
+
+    // Loop through command files inside the command type directory.
+    for (const file of fs.readdirSync(commandpath).filter(file => file.endsWith('.js'))) {
+        const command = require(path.join(commandpath, file));
+        client.commands.set(command.data.name, command);
+    }
+
 }
 
 client.on('ready', () => console.log(`${client.user.tag} has logged in`));
@@ -22,11 +30,13 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
-
     if (!command) return;
 
     try {
-        await command.execute(interaction);
+
+        // Execute the command.
+        await command.execute(interaction, client);
+
     } catch (error) {
         console.error(error);
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });

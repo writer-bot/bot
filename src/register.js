@@ -5,13 +5,24 @@ require('dotenv').config();
 
 const args = process.argv.slice(2);
 const client = {};
-
 client.commands = [];
-client.command_path = path.join(__dirname, 'commands');
 
-for (const file of fs.readdirSync(client.command_path).filter(file => file.endsWith('.js'))) {
-    const command = require(path.join(client.command_path, file));
-    client.commands.push(command.data.toJSON());
+const dirpath = path.join(__dirname, 'commands');
+
+// Loop through command type directories inside `commands` directory.
+for (const dir of fs.readdirSync(dirpath, {withFileTypes: true}).filter(item => item.isDirectory()).map(item => item.name)) {
+
+    const commandpath = path.join(dirpath, dir);
+
+    // Loop through command files inside the command type directory.
+    for (const file of fs.readdirSync(commandpath).filter(file => file.endsWith('.js'))) {
+        const command = require(path.join(commandpath, file));
+        client.commands.push({
+            type: dir,
+            data: command.data.toJSON(),
+        });
+    }
+
 }
 
 const registrar = new Registrar(client.commands);
@@ -24,18 +35,18 @@ const registrar = new Registrar(client.commands);
         // If we want to purge all commands from everywhere.
         // `npm run register -- purge`
         if (args[0] === 'purge') {
-            registrar.unregisterGlobal();
-            registrar.unregisterGuild();
+            await registrar.unregisterGlobal();
+            await registrar.unregisterGuild();
         }
 
         // Production - Push all global commands.
         else if (process.env.ENV === 'prod') {
-            registrar.registerGlobal();
+            await registrar.registerGlobal();
         }
 
         // Development - Push all guild commands.
         else if (process.env.ENV === 'dev') {
-            registrar.registerGuild();
+            await registrar.registerGuild();
         }
 
     } catch (error) {

@@ -9,7 +9,7 @@ class Registrar {
      * @param commands Array of commands from register.js
      */
     constructor(commands) {
-        this.commands = commands;
+        this.commands = commands.map(a => a.data);
         this.clientID = process.env.CLIENT_ID;
         this.guildID = process.env.GUILD_ID;
         this.rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
