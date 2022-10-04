@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-// const EmbeddedMessage = require('../../classes/embed');
 
 module.exports = {
 

@@ -1,47 +1,59 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
 require('dotenv').config();
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { DB } = require('./classes/database');
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds]
 });
 
+// Load all the commands onto the client object.
 client.commands = new Collection();
+require('./utils/commands')(client);
 
-const dirpath = path.join(__dirname, 'commands');
-
-for (const dir of fs.readdirSync(dirpath, {withFileTypes: true}).filter(item => item.isDirectory()).map(item => item.name)) {
-
-    const commandpath = path.join(dirpath, dir);
-
-    // Loop through command files inside the command type directory.
-    for (const file of fs.readdirSync(commandpath).filter(file => file.endsWith('.js'))) {
-        const command = require(path.join(commandpath, file));
-        client.commands.set(command.data.name, command);
-    }
-
-}
-
-client.on('ready', () => console.log(`${client.user.tag} has logged in`));
+client.on('ready', () => {
+    console.log(`[LOGIN] ${client.user.tag} has logged in`);
+});
 
 client.on('interactionCreate', async interaction => {
 
-    if (!interaction.isChatInputCommand()) return;
+    // If it's not a slash command, stop.
+    if (!interaction.isChatInputCommand()) {
+        return;
+    }
 
+    // Get the command based on its name.
     const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+    if (!command) {
+        return;
+    }
 
+    // TODO: Logging.
+
+    // Try and execute the command.
     try {
 
-        // Execute the command.
-        await command.execute(interaction, client);
+        // Create database connection to use in command.
+        const db = new DB();
+        await db.connect();
 
-    } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+        // Execute the command.
+        await command.execute(interaction, client, db);
+
+        // Close database connection and free up pool slot.
+        await db.end();
+
+    } catch (err) {
+
+        console.error('[ERROR] Error running command ('+interaction.commandName+'): ' + err);
+
+        await interaction.reply({
+            content: 'There was an error while executing this command!',
+            ephemeral: true
+        });
+
     }
 
 })
 
+// Login to the API.
 client.login(process.env.TOKEN);
