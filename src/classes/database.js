@@ -256,6 +256,16 @@ class DB {
 
     }
 
+    /**
+     * Execute some raw SQL
+     * @param sql
+     * @param params
+     * @returns {Promise<any>}
+     */
+    async execute(sql, params = []) {
+        return await this.connection.execute(sql, params);
+    }
+
 }
 
 module.exports = {

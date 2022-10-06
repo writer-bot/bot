@@ -1,8 +1,10 @@
+require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const Registrar = require('./classes/registrar');
-require('dotenv').config();
+const ConsoleWriter = require('./classes/console')
 
+const Console = new ConsoleWriter();
 const args = process.argv.slice(2);
 const client = {};
 client.commands = [];
@@ -30,7 +32,7 @@ const registrar = new Registrar(client.commands);
 (async () => {
     try {
 
-        console.log(`[${process.env.ENV}] Started refreshing ${client.commands.length} application (/) commands.`);
+        Console.yellow(`[${process.env.ENV}] Started refreshing ${client.commands.length} application (/) commands.`);
 
         // If we want to purge all commands from everywhere.
         // `npm run register -- purge`
@@ -50,6 +52,6 @@ const registrar = new Registrar(client.commands);
         }
 
     } catch (error) {
-        console.error(error);
+        Console.red(error);
     }
 })();

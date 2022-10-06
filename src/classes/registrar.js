@@ -1,6 +1,7 @@
 const { Routes } = require('discord.js');
 const { REST } = require('@discordjs/rest');
-require('dotenv').config();
+const ConsoleWriter = require('./console')
+const Console = new ConsoleWriter();
 
 class Registrar {
 
@@ -24,7 +25,7 @@ class Registrar {
         await this.rest.put(
             Routes.applicationGuildCommands(this.clientID, this.guildID),
             { body: this.commands }
-        ).then(() => console.log(`[GUILD] Successfully registered ${this.commands.length} guild commands`));
+        ).then(() => Console.green(`[GUILD] Successfully registered ${this.commands.length} guild commands`));
 
     };
 
@@ -35,7 +36,7 @@ class Registrar {
     async unregisterGuild() {
 
         await this.rest.put(Routes.applicationGuildCommands(this.clientID, this.guildID), { body: [] })
-            .then(() => console.log(`[GUILD] Successfully deleted all guild commands from development server`))
+            .then(() => Console.green(`[GUILD] Successfully deleted all guild commands from development server`))
             .catch(console.error);
 
     };
@@ -49,7 +50,7 @@ class Registrar {
         await this.rest.put(
             Routes.applicationCommands(this.clientID),
             { body: this.commands },
-        ).then(() => console.log(`[GLOBAL] Successfully registered ${this.commands.length} guild commands`));
+        ).then(() => Console.green(`[GLOBAL] Successfully registered ${this.commands.length} guild commands`));
 
     };
 
@@ -60,7 +61,7 @@ class Registrar {
     async unregisterGlobal() {
 
         await this.rest.put(Routes.applicationCommands(this.clientID), { body: [] })
-            .then(() => console.log('[GLOBAL] Successfully deleted all application commands.'))
+            .then(() => Console.green('[GLOBAL] Successfully deleted all application commands.'))
             .catch(console.error);
 
     };
