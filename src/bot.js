@@ -1,12 +1,11 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+
+const client = require('./utils/client')
+const { Collection } = require('discord.js')
 const { DB } = require('./classes/database');
 const ConsoleWriter = require('./classes/console')
-
+const testTask = require('./tasks/test')
 const Console = new ConsoleWriter();
-const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
-});
 
 // Load all the commands onto the client object.
 client.commands = new Collection();
@@ -56,6 +55,13 @@ client.on('interactionCreate', async interaction => {
     }
 
 })
+
+// Set interval for scheduled tasks.
+Console.yellow('Creating scheduled task interval');
+client.tasks = {
+    'last': 0,
+    'interval': setInterval(testTask, 5000),
+};
 
 // Login to the API.
 client.login(process.env.TOKEN);

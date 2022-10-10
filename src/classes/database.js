@@ -124,10 +124,10 @@ class DB {
      * @returns {Promise<boolean|any>}
      * @private
      */
-    async _build_update(table, params) {
+    async _build_update(table, params, where = null) {
 
-        // id field must be present in order to update the record.
-        if (params['id'] === undefined) {
+        // id field must be present in order to update the record, if the where object is not specified.
+        if (where === null && params['id'] === undefined) {
             return false;
         }
 
@@ -144,8 +144,21 @@ class DB {
         }
         sql += set_sql.join(', ');
 
-        sql += ' WHERE id = ?';
-        sql_params.push(params['id']);
+        sql += ' WHERE ';
+        if (where !== null) {
+
+            let where_sql = [];
+            for (let key in where) {
+                where_sql.push(key + ' = ?');
+                sql_params.push(where[key]);
+            }
+
+            sql += where_sql.join(' AND ');
+
+        } else {
+            sql += 'id = ?';
+            sql_params.push(params['id']);
+        }
 
         return await this.connection.execute(sql, sql_params);
 
@@ -227,8 +240,8 @@ class DB {
      * @param params
      * @returns {Promise<number>}
      */
-    async update(table, params) {
-        let result = await this._build_update(table, params);
+    async update(table, params, where = null) {
+        let result = await this._build_update(table, params, where);
         return (result) ? result.affectedRows : false;
     }
 

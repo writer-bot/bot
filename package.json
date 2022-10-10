@@ -4,9 +4,9 @@
   "description": "Discord bot for writing servers",
   "main": "src/bot.js",
   "scripts": {
-    "start": "node ./src/index.js",
+    "start": "node ./src/cluster.js",
     "register": "node ./src/register.js",
-    "dev": "node ./src/register.js && node ./src/index.js"
+    "dev": "node ./src/register.js && node ./src/cluster.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
   "dependencies": {
     "@discordjs/rest": "^1.2.0",
     "chalk": "^4.1.2",
+    "discord-hybrid-sharding": "^1.7.4",
     "discord.js": "^14.5.0",
     "dotenv": "^16.0.3",
     "human-date": "^1.4.0",
