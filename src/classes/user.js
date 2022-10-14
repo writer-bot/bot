@@ -1,14 +1,48 @@
 const Helper = require('./helper');
+const Experience = require('./experience');
 
 class User {
 
-    constructor(id, username, db) {
+    constructor(id, username, db, interaction = false) {
         this._db = db;
         this.id = id;
         this.username = username;
         this.stats = {};
+        this._client = false;
+        this._interaction = interaction;
     }
 
+    /**
+     * Set the bot client object into the user object.
+     * @param client
+     */
+    setClient(client) {
+        this._client = client;
+    }
+
+    /**
+     * Send a message, either as an interaction response or directly to a channel from a task
+     * @param message
+     * @returns {Promise<awaited Promise<Message<BooleanCache<Cached>>> | Promise<Message<BooleanCache<Cached>>> | Promise<Message<BooleanCache<Cached>>>>}
+     */
+    async say(message) {
+
+        // If the interaction property is not false, that means we are responding to a command.
+        if (this._interaction !== false) {
+            return await this._interaction.followUp(message);
+        } else if (this._client !== false) {
+            // If the client property is not false, that means we are running a task and passed the whole client in.
+            // TODO:
+        } else {
+            console.error('[ERROR] Cannot send message. Neither interaction or client object present on User');
+        }
+
+    }
+
+    /**
+     * Get the string to mention the user
+     * @returns {string}
+     */
     getMention() {
         return `<@${this.id}>`;
     }
@@ -39,13 +73,18 @@ class User {
         return await this._db.delete('user_challenges', {'user': this.id, 'completed': 0});
     }
 
+    /**
+     * Complete the current challenge.
+     * @param challenge
+     * @returns {Promise<void>}
+     */
     async completeChallenge(challenge) {
 
         // Update the record.
         challenge.completed = Helper.getUnixTimestamp();
         await this._db.update('user_challenges', challenge);
 
-        // TODO: Add the XP.
+        // Add the XP.
         await this.addXP(challenge.xp);
 
         // Add the statistic.
@@ -114,10 +153,61 @@ class User {
             return await this._db.insert('user_stats', {'user': this.id, 'name': name, 'value': amount});
         }
 
+    }
+
+    /**
+     * Get the user's XP amount
+     * @returns {Promise<*|boolean>}
+     */
+    async getXP() {
+
+        let record = await this._db.get('user_xp', {'user': this.id});
+        return (record) ? Experience.load(record['xp']) : false;
 
     }
 
-    async addXP(xp) {
+    /**
+     * Add to the user's XP
+     * @param amount
+     * @returns {Promise<number|*>}
+     */
+    async addXP(amount) {
+
+        const experience = await this.getXP();
+
+        // If they already have some XP, add them together.
+        if (experience) {
+            amount += experience.xp;
+        }
+
+        return await this.updateXP(experience, amount);
+
+    }
+
+    /**
+     * Update a user's XP to the given new amount.
+     * @returns {Promise<number|*>}
+     * @param existing
+     * @param amount
+     */
+    async updateXP(existing, amount) {
+
+        let existing_level = 1;
+
+        if (existing) {
+            existing_level = existing.getLevel();
+            await this._db.update('user_xp', {'xp': amount}, {'user': this.id});
+        } else {
+            await this._db.insert('user_xp', {'user': this.id, 'xp': amount});
+        }
+
+        // Load an experience object with the new value.
+        const user_xp = Experience.load(amount);
+
+        // Have they just hit a new level?
+        if (user_xp.getLevel() > existing_level) {
+            await this.say(`:tada: Congratulations ${this.getMention()}, you are now **Level ${user_xp.getLevel()}**`);
+        }
 
     }
 

@@ -48,17 +48,16 @@ module.exports = {
      * Execute the challenge command
      * @param interaction
      * @param client
+     * @param db
      * @returns {Promise<void>}
      */
     async execute(interaction, client, db) {
 
         const subCommand = interaction.options.getSubcommand();
-        const user = new User(interaction.user.id, interaction.user.username, db);
+        const user = new User(interaction.user.id, interaction.user.username, db, interaction);
 
         // Defer the reply.
         await interaction.deferReply();
-
-        // TODO: Guild command disable check.
 
         // Get the user's current challenge, if one exists.
         const challenge = await user.getChallenge();
@@ -132,8 +131,9 @@ module.exports = {
 
             if (challenge) {
 
+                await interaction.editReply(`${user.getMention()}, you have completed your writing challenge **${challenge.challenge}**      +${challenge.xp}xp`);
                 await user.completeChallenge(challenge);
-                return await interaction.editReply(`${user.getMention()}, you have completed your writing challenge **${challenge.challenge}**      +${challenge.xp}xp`);
+                return
 
             } else {
                 return await interaction.editReply(`${user.getMention()}, you do not have an active writing challenge`);
