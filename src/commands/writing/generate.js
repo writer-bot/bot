@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const Generator = require('./../../classes/generator');
-const User = require("../../classes/user");
-const Helper = require("../../classes/helper");
+const User = require('../../classes/user');
+const Helper = require('../../classes/helper');
 
 module.exports = {
 
@@ -28,7 +28,7 @@ module.exports = {
         ),
 
     /**
-     * Execute the challenge command
+     * Execute the generate command
      * @param interaction
      * @param client
      * @param db
