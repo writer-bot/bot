@@ -7,6 +7,9 @@ const ConsoleWriter = require('./classes/console')
 const testTask = require('./tasks/test')
 const Console = new ConsoleWriter();
 
+// Load globals.
+require('./utils/globals');
+
 // Load all the commands onto the client object.
 client.commands = new Collection();
 require('./utils/commands')(client);

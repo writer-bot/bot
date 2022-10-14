@@ -1,7 +1,3 @@
-// const client = new Client({
-//     intents: [GatewayIntentBits.Guilds]
-// });
-
 const Cluster = require('discord-hybrid-sharding');
 const { Client, GatewayIntentBits } = require('discord.js');
 
