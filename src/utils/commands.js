@@ -1,5 +1,6 @@
 const path = require("node:path");
 const fs = require("node:fs");
+const logger = require('./logger');
 
 module.exports = async(client) => {
 
@@ -11,12 +12,12 @@ module.exports = async(client) => {
 
         // Loop through command files inside the command type directory.
         for (const file of fs.readdirSync(command_path).filter(file => file.endsWith('.js'))) {
-            console.log('[CMD] Loading command: ' + dir + '/' + file);
+            logger.debug('Loading command: ' + dir + '/' + file);
             try {
                 const command = require(path.join(command_path, file));
                 await client.commands.set(command.data.name, command);
             } catch (err) {
-                console.log('[ERROR] Cannot load command. ' + err);
+                logger.error('Cannot load command: ' + err);
             }
         }
 

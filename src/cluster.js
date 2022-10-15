@@ -1,9 +1,8 @@
 require('dotenv').config();
 const Cluster = require('discord-hybrid-sharding');
 const path = require("node:path");
-const ConsoleWriter = require('./classes/console')
+const logger = require('./utils/logger');
 
-const Console = new ConsoleWriter();
 const manager = new Cluster.Manager(
     path.join(__dirname, 'bot.js'),
     {
@@ -14,5 +13,5 @@ const manager = new Cluster.Manager(
     }
 );
 
-manager.on('clusterCreate', cluster => Console.blue(`Launched Cluster ${cluster.id}`));
+manager.on('clusterCreate', cluster => logger.debug(`Launched Cluster ${cluster.id}`));
 manager.spawn({ timeout: -1 });

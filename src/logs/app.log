@@ -1,0 +1,33 @@
+2022-10-14 23:27:43 : [info] : This is some info
+[2022-10-14 23:30:07][INFO] :: This is some info
+[2022-10-14 23:30:16][INFO] :: This is some info
+[2022-10-14 23:30:33][INFO] :: This is some info
+[2022-10-14 23:32:16][INFO] :: This is some info
+[2022-10-14 23:32:30][INFO] :: This is some info
+[2022-10-14 23:33:17][INFO] :: This is some info
+[2022-10-14 23:39:26][INFO] :: user 291154723631792129 called test in server 503593039541960704
+[2022-10-14 23:40:22][INFO] :: user 291154723631792129 called wrote in server 503593039541960704
+[2022-10-14 23:41:19][INFO] :: user 291154723631792129 called wrote in server 503593039541960704
+[2022-10-14 23:49:25][INFO] :: HELLO{"a":"A","b":"B"}
+[2022-10-14 23:50:29][INFO] :: HELLO
+[2022-10-14 23:50:29][INFO] :: HELLO {"a":"A","b":"B"}
+[2022-10-14 23:50:44][INFO] :: HELLO
+[2022-10-14 23:50:44][INFO] :: HELLO :-: {"a":"A","b":"B"}
+[2022-10-14 23:50:59][INFO] :: HELLO
+[2022-10-14 23:50:59][INFO] :: HELLO :-: {"a":"A","b":"B"}
+[2022-10-14 23:51:29][INFO] HELLO
+[2022-10-14 23:51:29][INFO] HELLO :-: {"a":"A","b":"B"}
+[2022-10-14 23:52:13][INFO] user 291154723631792129 called wrote in server 503593039541960704 :: [{"name":"amount","type":4,"value":10}]
+[2022-10-14 23:52:26][INFO] user 291154723631792129 called generate in server 503593039541960704 :: [{"name":"type","type":3,"value":"book_hp"},{"name":"amount","type":4,"value":6}]
+[2022-10-14 23:59:43][INFO] user 291154723631792129 called generate in server 503593039541960704 [{"name":"type","type":3,"value":"book"},{"name":"amount","type":4,"value":12}]
+[2022-10-15 00:05:26][INFO] user 291154723631792129 called wrote in server 503593039541960704 {"options":[{"name":"amount","type":4,"value":1}],"uuid":"12928c30-4c1d-11ed-a887-2b6d02027fdd"}
+[2022-10-15 00:06:21][INFO] HELLO
+[2022-10-15 00:06:21][INFO] HELLO
+{"a":"A","b":"B"}
+[2022-10-15 00:06:34][INFO] HELLO
+[2022-10-15 00:06:34][INFO] HELLO
+{"a":"A","b":"B"}
+[2022-10-15 00:06:34][INFO] HELLO
+{"a":"A","b":"B"}
+[2022-10-15 00:06:34][INFO] HELLO
+{"a":"A","b":"B"}

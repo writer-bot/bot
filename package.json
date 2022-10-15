@@ -31,7 +31,9 @@
     "discord.js": "^14.5.0",
     "dotenv": "^16.0.3",
     "human-date": "^1.4.0",
-    "mariadb": "^3.0.1"
+    "mariadb": "^3.0.1",
+    "uuid": "^9.0.0",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "eslint": "^8.24.0"

@@ -4,8 +4,9 @@ const client = require('./utils/client')
 const { Collection } = require('discord.js')
 const { DB } = require('./classes/database');
 const ConsoleWriter = require('./classes/console')
-const testTask = require('./tasks/test')
-const Console = new ConsoleWriter();
+// const testTask = require('./tasks/test')
+const logger = require('./utils/logger');
+const uuid = require('uuid');
 
 // Load globals.
 require('./utils/globals');
@@ -15,7 +16,7 @@ client.commands = new Collection();
 require('./utils/commands')(client);
 
 client.on('ready', () => {
-    Console.green(`[LOGIN] ${client.user.tag} has logged in`);
+    logger.debug(`[LOGIN] ${client.user.tag} has logged in`);
 });
 
 client.on('interactionCreate', async interaction => {
@@ -31,7 +32,13 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    // TODO: Logging.
+    let uid = uuid.v1();
+
+    // Log command usage.
+    logger.info(`user ${interaction.user.id} called ${interaction.commandName} in server ${interaction.guildId}`, {
+        options: interaction.options.data,
+        uuid: uid
+    });
 
     // Try and execute the command.
     try {
@@ -48,7 +55,9 @@ client.on('interactionCreate', async interaction => {
 
     } catch (err) {
 
-        Console.red('[ERROR] Error running command ('+interaction.commandName+'): ' + err);
+        logger.error('Error running command: ' + err, {
+            uuid: uid
+        })
 
         await interaction.reply({
             content: 'There was an error while executing this command!',
@@ -60,11 +69,11 @@ client.on('interactionCreate', async interaction => {
 })
 
 // Set interval for scheduled tasks.
-Console.yellow('Creating scheduled task interval');
-client.tasks = {
-    'last': 0,
-    'interval': setInterval(testTask, 5000),
-};
+// Console.yellow('Creating scheduled task interval');
+// client.tasks = {
+//     'last': 0,
+//     'interval': setInterval(testTask, 5000),
+// };
 
 // Login to the API.
 client.login(process.env.TOKEN);
