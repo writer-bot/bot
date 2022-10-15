@@ -211,6 +211,104 @@ class User {
 
     }
 
+    /**
+     * Get the goal record for a specific type for this user
+     * @param type
+     * @returns {Promise<*>}
+     */
+    async getGoal(type) {
+        return await this._db.get('user_goals', {'user': this.id, 'type': type});
+    }
+
+    /**
+     * Set a goal for the user
+     * @param type
+     * @param amount
+     * @returns {Promise<number|*>}
+     */
+    async setGoal(type, amount) {
+
+        const goal = await this.getGoal(type);
+
+        // TODO: Calculate next reset time based on user timezone.
+        const reset = 0;
+
+        if (goal) {
+            goal.goal = amount;
+            goal.reset = reset;
+            return await this._db.update('user_goals', goal);
+        } else {
+            return await this._db.insert('user_goals', {
+                'user': this.id, 'type': type, 'goal': amount, 'current': 0, 'completed': 0, 'reset': reset
+            });
+        }
+
+    }
+
+    /**
+     * Delete one of the user's goals
+     * @param type
+     * @returns {Promise<*>}
+     */
+    async deleteGoal(type) {
+        return await this._db.delete('user_goals', {
+            'user': this.id, 'type': type
+        });
+    }
+
+    /**
+     * Update the user's goal record with a new amount for the current word count progress.
+     * @param goal
+     * @param amount
+     * @returns {Promise<*>}
+     */
+    async updateGoal(goal, amount) {
+
+        goal.current = amount;
+        return await this._db.update('user_goals', goal);
+
+    }
+
+    /**
+     * Get the progress of a user's goal
+     * @param type
+     * @returns {Promise<{str: string, current: number, goal: number, left: number, percent: number, done: number}>}
+     */
+    async getGoalProgress(type) {
+
+        let progress = {
+            'exists': false,
+            'percent': 0,
+            'done': 0,
+            'left': 0,
+            'goal': 0,
+            'current': 0,
+        };
+
+        const goal = await this.getGoal(type);
+        if (goal) {
+
+            progress.exists = true;
+            progress.percent = Math.floor((goal.current / goal.goal) * 100);
+            progress.done = Math.floor(progress.percent / 10);
+            progress.left = 10 - progress.done;
+            progress.goal = goal.goal;
+            progress.current = goal.current;
+
+            if (progress.done > 10) {
+                progress.done = 10;
+            }
+
+            if (progress.left < 0) {
+                progress.left = 0;
+            }
+
+        }
+
+        return progress;
+
+    }
+
 }
 
 module.exports = User;

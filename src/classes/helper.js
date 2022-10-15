@@ -34,6 +34,15 @@ class Helper {
         return array.sort(() => 0.5 - Math.random())[0];
     }
 
+    /**
+     * Make the first character of the string uppercase
+     * @param text
+     * @returns {string}
+     */
+    static firstUpper(text) {
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
 }
 
 module.exports = Helper;

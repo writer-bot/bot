@@ -1,8 +1,7 @@
 const winston = require("winston");
 const path = require("node:path");
+require('winston-daily-rotate-file');
 require('./globals')
-
-// TODO: Rotating daily files so it doesn't fill out the same one.
 
 // Define formats for different loggers.
 const formats = {
@@ -27,21 +26,33 @@ const loggers = {
         level: 'info',
         transports: [
             new winston.transports.Console({ format: formats.console }),
-            new winston.transports.File({ filename: path.join(LOG_DIR, 'app.log'), format: formats.file }),
+            new winston.transports.DailyRotateFile({
+                filename: path.join(LOG_DIR, '%DATE%-app.log'),
+                datePattern: 'DD',
+                format: formats.file
+            }),
         ],
     }),
     errors: winston.createLogger({
         level: 'error',
         transports: [
             new winston.transports.Console({ format: formats.console }),
-            new winston.transports.File({ filename: path.join(LOG_DIR, 'error.log'), format: formats.file }),
+            new winston.transports.DailyRotateFile({
+                filename: path.join(LOG_DIR, '%DATE%-error.log'),
+                datePattern: 'DD',
+                format: formats.file
+            }),
         ],
     }),
     debugs: winston.createLogger({
         level: 'debug',
         transports: [
             new winston.transports.Console({ format: formats.console }),
-            new winston.transports.File({ filename: path.join(LOG_DIR, 'debug.log'), format: formats.file }),
+            new winston.transports.DailyRotateFile({
+                filename: path.join(LOG_DIR, '%DATE%-debug.log'),
+                datePattern: 'DD',
+                format: formats.file,
+            }),
         ],
     }),
 };

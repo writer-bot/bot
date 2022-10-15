@@ -32,7 +32,7 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    let uid = uuid.v1();
+    let uid = uuid.v4();
 
     // Log command usage.
     logger.info(`user ${interaction.user.id} called ${interaction.commandName} in server ${interaction.guildId}`, {

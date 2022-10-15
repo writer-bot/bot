@@ -33,7 +33,8 @@
     "human-date": "^1.4.0",
     "mariadb": "^3.0.1",
     "uuid": "^9.0.0",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
     "eslint": "^8.24.0"
