@@ -185,8 +185,8 @@ class DB {
      * @param sort
      * @returns {Promise<{length}|any|boolean>}
      */
-    async get_all(table, where = null, fields = ['*'], sort = null) {
-        let results = await this._build_get(table, where, fields, sort);
+    async get_all(table, where = null, fields = ['*'], sort = null, limit = null) {
+        let results = await this._build_get(table, where, fields, sort, limit);
         return (results.length) ? results : false;
     }
 

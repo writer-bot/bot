@@ -43,6 +43,39 @@ class Helper {
         return text.charAt(0).toUpperCase() + text.slice(1);
     }
 
+    /**
+     * Convert a number of seconds to a nice, human-readable string
+     * @param totalSeconds
+     * @returns {string}
+     */
+    static formatSecondsToDays(totalSeconds) {
+
+        const seconds = Math.floor(totalSeconds % 60);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const days = Math.floor(totalSeconds / (3600 * 24));
+
+        const secondsStr = Helper.makeHumanReadable(seconds, 'second');
+        const minutesStr = Helper.makeHumanReadable(minutes, 'minute');
+        const hoursStr = Helper.makeHumanReadable(hours, 'hour');
+        const daysStr = Helper.makeHumanReadable(days, 'day');
+
+        return `${daysStr}${hoursStr}${minutesStr}${secondsStr}`.replace(/,\s*$/, '');
+
+    }
+
+    /**
+     * Used by formatSecondsToDays to format a value with a label, e.g. "1" "second", or "2" "seconds"
+     * @param value
+     * @param label
+     * @returns {string|string}
+     */
+    static makeHumanReadable(value, label) {
+        return value > 0
+            ? value + (value === 1 ? ` ${label}, ` : ` ${label}s, `)
+            : '';
+    }
+
 }
 
 module.exports = Helper;

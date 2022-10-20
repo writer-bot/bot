@@ -309,6 +309,30 @@ class User {
 
     }
 
+    /**
+     * Get the user's goal history records
+     * @param type
+     * @returns {Promise<{length}|*|boolean>}
+     */
+    async getGoalHistory(type) {
+
+        let max = null;
+
+        if (type === 'daily') {
+            max = 14;
+        } else if (type === 'weekly') {
+            max = 4;
+        } else if (type === 'monthly') {
+            max = 12;
+        }
+
+        return this._db.get_all('user_goals_history', {
+            'user': this.id,
+            'type': type,
+        }, ['*'], ['id DESC'], max);
+
+    }
+
 }
 
 module.exports = User;

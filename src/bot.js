@@ -55,8 +55,9 @@ client.on('interactionCreate', async interaction => {
 
     } catch (err) {
 
-        logger.error('Error running command: ' + err, {
-            uuid: uid
+        logger.error(`Error running command ${interaction.commandName}`, {
+            uuid: uid,
+            stack: err.stack
         })
 
         await interaction.reply({

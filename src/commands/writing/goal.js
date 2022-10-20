@@ -91,6 +91,42 @@ module.exports = {
 
                 })
         )
+        .addSubcommand(subcommand =>
+            subcommand.setName('time')
+                .setDescription('Check how long until your goal resets')
+                .addStringOption((option) => {
+                    option.setName('type')
+                        .setDescription('Which goal do you want to check?')
+                        .setRequired(true)
+
+                    for (const [key, name] of Object.entries(Goal.TYPES)) {
+                        option.addChoices({
+                            name: name, value: key
+                        });
+                    }
+
+                    return option;
+
+                })
+        )
+        .addSubcommand(subcommand =>
+            subcommand.setName('history')
+                .setDescription('Check the historical data for one of your writing goals')
+                .addStringOption((option) => {
+                    option.setName('type')
+                        .setDescription('Which goal do you want to check?')
+                        .setRequired(true)
+
+                    for (const [key, name] of Object.entries(Goal.TYPES)) {
+                        option.addChoices({
+                            name: name, value: key
+                        });
+                    }
+
+                    return option;
+
+                })
+        )
     ,
 
 
@@ -208,8 +244,52 @@ module.exports = {
 
         }
 
-        // TODO: "time"
-        // TODO: "history"
+        else if (subCommand === 'time') {
+
+            const type = interaction.options.getString('type');
+            const goal = await user.getGoal(type);
+            if (goal) {
+
+                const now = Helper.getUnixTimestamp();
+                let left = Helper.formatSecondsToDays(parseInt(goal.reset) - now);
+                if (left === '') {
+                    left = 'no time';
+                }
+                return await interaction.editReply(`${user.getMention()}, ${left} left until ${type} goal resets.`);
+
+            } else {
+                return await interaction.editReply(`${user.getMention()}, you do not currently have a ${type} goal. Maybe you should set one?`);
+            }
+
+        }
+
+        else if (subCommand === 'history') {
+
+            const type = interaction.options.getString('type');
+            const history = await user.getGoalHistory(type);
+            let fields = [];
+            if (history) {
+                for (let record of history) {
+
+                    let text = '';
+                    text += record.result + '/' + record.goal;
+                    if (record.completed) {
+                        text += ' :white_check_mark:';
+                    }
+                    fields.push({ name: record.date, value: text, inline: false });
+
+                }
+            }
+
+            const embed = new EmbeddedMessage(interaction.user)
+                .build({
+                    title: `${Helper.firstUpper(type)} Goal History`,
+                    fields: fields,
+                });
+
+            return interaction.editReply({ embeds: [embed] });
+
+        }
 
     }
 
