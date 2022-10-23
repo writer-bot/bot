@@ -20,11 +20,11 @@ module.exports = {
         // Defer the reply.
         await interaction.deferReply();
 
-        // TODO: Guild command disable check.
+        const shardID = interaction.guild.shardId;
 
         const promises = [
-            client.shard.fetchClientValues('guilds.cache.size'),
-            client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
+            client.cluster.fetchClientValues('guilds.cache.size'),
+            client.cluster.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
         ];
 
         // Build the fields for the embedded message.
@@ -32,6 +32,7 @@ module.exports = {
         fields.push({ name: 'Version', value: process.env.VERSION, inline: true });
         fields.push({ name: 'Up since', value: HumanDate.relativeTime(client.uptime / 1000, {futureSuffix: 'ago', allUnits: true}), inline: true });
         fields.push({ name: 'Latency', value: client.ws.ping.toString() + 'ms', inline: true });
+        fields.push({ name: 'Shard #', value: shardID.toString(), inline: true });
 
         // TODO: Stats about sprints, etc...
 

@@ -3,8 +3,7 @@ require('dotenv').config();
 const client = require('./utils/client')
 const { Collection } = require('discord.js')
 const { DB } = require('./classes/database');
-const ConsoleWriter = require('./classes/console')
-// const testTask = require('./tasks/test')
+const cron = require('./tasks/main')
 const logger = require('./utils/logger');
 const uuid = require('uuid');
 
@@ -16,7 +15,7 @@ client.commands = new Collection();
 require('./utils/commands')(client);
 
 client.on('ready', () => {
-    logger.debug(`[LOGIN] ${client.user.tag} has logged in`);
+    logger.info(`[CLUSTER ${client.cluster.id}] [LOGIN] ${client.user.tag} has logged in`);
 });
 
 client.on('interactionCreate', async interaction => {
@@ -69,12 +68,20 @@ client.on('interactionCreate', async interaction => {
 
 })
 
-// Set interval for scheduled tasks.
-// Console.yellow('Creating scheduled task interval');
-// client.tasks = {
-//     'last': 0,
-//     'interval': setInterval(testTask, 5000),
-// };
-
 // Login to the API.
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN).then(() => {
+
+    // If we are on the first cluster, set up the scheduled tasks to run.
+    if (client.cluster.id === 0) {
+
+        logger.info(`[CLUSTER ${client.cluster.id}] Starting scheduled tasks`);
+
+        // Start the task.
+        client.task = {
+            last: 0,
+            interval: setInterval(() => cron(client), 5000),
+        };
+
+    }
+
+});

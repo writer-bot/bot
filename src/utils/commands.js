@@ -12,12 +12,12 @@ module.exports = async(client) => {
 
         // Loop through command files inside the command type directory.
         for (const file of fs.readdirSync(command_path).filter(file => file.endsWith('.js'))) {
-            logger.debug('Loading command: ' + dir + '/' + file);
+            logger.info('[CLUSTER ' + client.cluster.id + '] Loading command: ' + dir + '/' + file);
             try {
                 const command = require(path.join(command_path, file));
                 await client.commands.set(command.data.name, command);
             } catch (err) {
-                logger.error('Cannot load command: ' + err);
+                logger.error('[CLUSTER ' + client.cluster.id + '] Cannot load command: ' + err);
             }
         }
 
