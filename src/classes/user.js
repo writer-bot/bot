@@ -1,5 +1,6 @@
 const Helper = require('./helper');
 const Experience = require('./experience');
+const moment = require("moment/moment");
 
 class User {
 
@@ -230,8 +231,8 @@ class User {
 
         const goal = await this.getGoal(type);
 
-        // TODO: Calculate next reset time based on user timezone.
-        const reset = 0;
+        // Calculate next reset time based on user's datetime.
+        const reset = await this.calculateResetTime(type);
 
         if (goal) {
             goal.goal = amount;
@@ -241,6 +242,137 @@ class User {
             return await this._db.insert('user_goals', {
                 'user': this.id, 'type': type, 'goal': amount, 'current': 0, 'completed': 0, 'reset': reset
             });
+        }
+
+    }
+
+    /**
+     * Go through all the user's goals and update the reset time, based on their current datetime setting.
+     * @returns {Promise<void>}
+     */
+    async updateAllGoalResetTimes() {
+
+        const goals = await this._db.get_all('user_goals', {'user': this.id});
+        if (goals) {
+            for (let goal of goals) {
+
+                // By setting the goal again, it will update the reset time.
+                await this.setGoal(goal.type, goal.goal);
+
+            }
+        }
+
+    }
+
+    /**
+     * Calculate when the user's goal should reset
+     * @param type
+     * @returns {Promise<*>}
+     */
+    async calculateResetTime(type) {
+
+        let offset = 0;
+
+        // Get the user's datetime offset from the server.
+        const setting = await this.getSetting('datetime');
+        if (setting) {
+            offset = parseInt(setting.value);
+        }
+
+        // To start with, get next midnight in server time (UTC).
+        const server_time = moment();
+        let server_midnight;
+
+
+        // Now, change it depending on the goal type.
+        if (type === 'weekly') {
+
+            // Get midnight of Monday next week.
+            server_midnight = server_time.add(1, 'week').startOf('isoWeek');
+
+        } else if (type === 'monthly') {
+
+            // Get midnight of the 1st of next month.
+            server_midnight = server_time.add(1, 'month').startOf('month');
+
+        } else if (type === 'yearly') {
+
+            // Get midnight of the 1st of Jan next year.
+            server_midnight = server_time.add(1, 'year').startOf('year');
+
+        } else {
+
+            // Get the next midnight - This is 'daily' and also the fallback option.
+            server_midnight = server_time.add(1, 'days').startOf('day');
+
+        }
+
+        // Add the user's offset to the server midnight time.
+        return server_midnight.unix() + (offset * 60);
+
+    }
+
+    /**
+     * Reset the user's goal
+     * @param goal
+     * @returns {Promise<void>}
+     */
+    async resetGoal(goal) {
+
+        const previous = await this.getPreviousGoalDate(goal.type);
+
+        // Insert a record into the history table, so we can see historical goals.
+        await this._db.insert('user_goals_history', {
+            'user': goal.user,
+            'type': goal.type,
+            'date': previous,
+            'goal': goal.goal,
+            'result': goal.current,
+            'completed': goal.completed,
+        });
+
+        // Calculate the next reset time for this goal.
+        const next = await this.calculateResetTime(goal.type);
+
+        // Update the goal record with the new reset time and resetting completed and current data.
+        goal.completed = 0;
+        goal.current = 0;
+        goal.reset = next;
+        await this._db.update('user_goals', goal);
+
+    }
+
+    /**
+     * Get the previous period date for a goal, depending on the type.
+     * E.g. the previous day, week, month, year
+     * @param type
+     * @returns {Promise<string>}
+     */
+    async getPreviousGoalDate(type) {
+
+        let offset = 0;
+
+        // Get the user's datetime offset from the server.
+        const setting = await this.getSetting('datetime');
+        if (setting) {
+            offset = parseInt(setting.value);
+        }
+
+        const server_time = moment();
+        const user_time = moment(server_time.unix() + (offset * 60), 'X');
+
+        if (type === 'weekly') {
+            const previous = user_time.subtract(1, 'week');
+            return previous.format('DD MMM YYYY');
+        } else if (type === 'monthly') {
+            const previous = user_time.subtract(1, 'month');
+            return previous.format('MMM YYYY');
+        } else if (type === 'yearly') {
+            const previous = user_time.subtract(1, 'year');
+            return previous.format('YYYY');
+        } else {
+            const previous = user_time.subtract(1, 'day');
+            return previous.format('DD MMM YYYY');
         }
 
     }
@@ -326,10 +458,58 @@ class User {
             max = 12;
         }
 
-        return this._db.get_all('user_goals_history', {
+        return await this._db.get_all('user_goals_history', {
             'user': this.id,
             'type': type,
         }, ['*'], ['id DESC'], max);
+
+    }
+
+    /**
+     * Get all of the user's settings
+     * @returns {Promise<{}>}
+     */
+    async getSettings() {
+
+        let results = {};
+        let records = await this._db.get_all('user_settings', {'user': this.id});
+        if (records) {
+            for (let row of records) {
+                results[row.setting] = row.value;
+            }
+        }
+
+        return results;
+
+    }
+
+    /**
+     * Get a specific setting for the user
+     * @param setting
+     * @returns {Promise<*>}
+     */
+    async getSetting(setting) {
+        return await this._db.get('user_settings', {'user': this.id, 'setting': setting});
+    }
+
+    /**
+     * Set a goal for the user
+     * @returns {Promise<number|*>}
+     * @param setting
+     * @param value
+     */
+    async updateSetting(setting, value) {
+
+        const record = await this.getSetting(setting);
+
+        if (record) {
+            record.value = value;
+            return await this._db.update('user_settings', record);
+        } else {
+            return await this._db.insert('user_settings', {
+                'user': this.id, 'setting': setting, 'value': value
+            });
+        }
 
     }
 

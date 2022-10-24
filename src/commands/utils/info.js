@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const EmbeddedMessage = require('../../classes/embed');
 const HumanDate = require('human-date');
+const moment = require('moment');
 require('dotenv').config();
 
 module.exports = {
@@ -21,6 +22,7 @@ module.exports = {
         await interaction.deferReply();
 
         const shardID = interaction.guild.shardId;
+        const now = new Date();
 
         const promises = [
             client.cluster.fetchClientValues('guilds.cache.size'),
@@ -32,6 +34,7 @@ module.exports = {
         fields.push({ name: 'Version', value: process.env.VERSION, inline: true });
         fields.push({ name: 'Up since', value: HumanDate.relativeTime(client.uptime / 1000, {futureSuffix: 'ago', allUnits: true}), inline: true });
         fields.push({ name: 'Latency', value: client.ws.ping.toString() + 'ms', inline: true });
+        fields.push({ name: 'Server Time', value: moment(now).format('DD-MMM-YYYY, HH:mm'), inline: true });
         fields.push({ name: 'Shard #', value: shardID.toString(), inline: true });
 
         // TODO: Stats about sprints, etc...

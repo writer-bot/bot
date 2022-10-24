@@ -2,10 +2,11 @@ require('dotenv').config();
 
 const client = require('./utils/client')
 const { Collection } = require('discord.js')
-const { DB } = require('./classes/database');
+const DB = require('./classes/database');
 const cron = require('./tasks/main')
 const logger = require('./utils/logger');
 const uuid = require('uuid');
+const Task = require('./classes/task');
 
 // Load globals.
 require('./utils/globals');
@@ -76,7 +77,11 @@ client.login(process.env.TOKEN).then(() => {
 
         logger.info(`[CLUSTER ${client.cluster.id}] Starting scheduled tasks`);
 
-        // Start the task.
+        (async () => {
+            await Task.setup();
+        })();
+
+        // Start the main task.
         client.task = {
             last: 0,
             interval: setInterval(() => cron(client), 5000),

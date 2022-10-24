@@ -76,6 +76,15 @@ class Helper {
             : '';
     }
 
+    /**
+     * Check if the given value is a number or can be converted to a number
+     * @param value
+     * @returns {boolean}
+     */
+    static isNumber(value) {
+        return (!isNaN(parseInt(value)));
+    }
+
 }
 
 module.exports = Helper;

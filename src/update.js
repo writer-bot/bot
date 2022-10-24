@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { DB } = require("./classes/database");
+const DB = require("./classes/database");
 const { readFile } = require('fs/promises');
 const ConsoleWriter = require('./classes/console')
 const db = new DB();
