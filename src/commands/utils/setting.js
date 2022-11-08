@@ -1,5 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 const User = require('./../../classes/user');
+const Guild = require('./../../classes/guild');
 const Setting = require('../../classes/setting');
 const Helper = require('../../classes/helper');
 const moment = require("moment/moment");
@@ -49,6 +50,46 @@ module.exports = {
                 });
             return group_my;
         })
+        .addSubcommandGroup((group_server) => {
+            group_server
+                .setName('server')
+                .setDescription('Update or view the server settings for the bot')
+                .addSubcommand((server_list) => {
+                    server_list
+                        .setName('list')
+                        .setDescription('View a list of all the server settings for the bot');
+                    return server_list;
+                })
+                .addSubcommand((server_update) => {
+                    server_update
+                        .setName('update')
+                        .setDescription('Update one of the server settings for the bot')
+                        .addStringOption((option) => {
+                            option
+                                .setName('setting')
+                                .setDescription('Which setting do you want to update?')
+                                .setRequired(true);
+
+                            for (const [key, name] of Object.entries(Setting.GUILD_SETTINGS)) {
+                                option.addChoices({
+                                    name: name, value: key
+                                });
+                            }
+
+                            return option;
+
+                        })
+                        .addStringOption((option) => {
+                            option
+                                .setName('value')
+                                .setDescription('The value to set')
+                                .setRequired(true);
+                            return option;
+                        });
+                    return server_update;
+                });
+            return group_server;
+        })
     ,
     /**
      * Execute the challenge command
@@ -76,7 +117,7 @@ module.exports = {
                 let settings = await user.getSettings();
                 let output = '';
 
-                if (settings.length > 0) {
+                if (Object.entries(settings).length > 0) {
 
                     output = '```ini\n';
                     for (const [key, val] of Object.entries(settings)) {
@@ -134,6 +175,52 @@ module.exports = {
                 }
 
                 return await interaction.editReply(`Updated your setting \`${setting}\` to \`${value}\``);
+
+            }
+
+        } else if (group === 'server') {
+
+            if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+                return await interaction.editReply('You do not have permission to run server setting commands in this server');
+            }
+
+            const guild = new Guild(interaction.guildId, db);
+
+            // List my settings.
+            if (subcommand === 'list') {
+
+                let settings = await guild.getSettings();
+                let output = '';
+
+                if (Object.entries(settings).length > 0) {
+
+                    output = '```ini\n';
+                    for (const [key, val] of Object.entries(settings)) {
+                        output += key + ' = ' + val + '\n';
+                    }
+                    output += '```';
+
+                } else {
+                    output += 'No settings found';
+                }
+
+                return await interaction.editReply(`${output}`);
+
+            }
+
+            // Update settings.
+            else if (subcommand === 'update') {
+
+                const setting = interaction.options.getString('setting');
+                const value = interaction.options.getString('value');
+
+                // Sprint delay must be a number.
+                if (setting === 'sprint_delay_end' && !Helper.isNumber(value)) {
+                    return await interaction.editReply('Value must be a number, greater than 0');
+                }
+
+                await guild.updateSetting(setting, value);
+                return await interaction.editReply(`Updated server setting \`${setting}\` to \`${value}\``);
 
             }
 
