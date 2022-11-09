@@ -54,7 +54,7 @@ module.exports = {
     async execute(interaction, client, db) {
 
         const subCommand = interaction.options.getSubcommand();
-        const user = new User(interaction.user.id, interaction.user.username, db, interaction);
+        const user = new User(interaction.user.id, db, interaction);
 
         // Defer the reply.
         await interaction.deferReply();

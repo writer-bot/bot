@@ -26,7 +26,7 @@ module.exports = {
      */
     async execute(interaction, client, db) {
 
-        const user = new User(interaction.user.id, interaction.user.username, db, interaction);
+        const user = new User(interaction.user.id, db, interaction);
 
         // Defer the reply.
         await interaction.deferReply();
@@ -44,7 +44,8 @@ module.exports = {
         // Get new amount.
         const total = await user.getStat('total_words_written');
 
-        // TODO: Goal stuff.
+        // Update goals with added words written.
+        await user.addToGoals(amount);
 
         message += `added ${amount} to your total words written **(${total})**`;
 

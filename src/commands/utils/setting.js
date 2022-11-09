@@ -103,7 +103,7 @@ module.exports = {
         const group = interaction.options.getSubcommandGroup();
         const subcommand = interaction.options.getSubcommand();
 
-        const user = new User(interaction.user.id, interaction.user.username, db, interaction);
+        const user = new User(interaction.user.id, db, interaction);
 
         // Defer the reply.
         await interaction.deferReply({ ephemeral: true });

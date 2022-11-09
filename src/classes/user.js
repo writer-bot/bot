@@ -4,10 +4,9 @@ const moment = require("moment/moment");
 
 class User {
 
-    constructor(id, username, db, interaction = false) {
+    constructor(id, db, interaction = false) {
         this._db = db;
         this.id = id;
-        this.username = username;
         this.stats = {};
         this._client = false;
         this._interaction = interaction;
@@ -509,6 +508,56 @@ class User {
             return await this._db.insert('user_settings', {
                 'user': this.id, 'setting': setting, 'value': value
             });
+        }
+
+    }
+
+    /**
+     * Add written words amount to all of the user's current goals.
+     * @param amount
+     * @returns {Promise<void>}
+     */
+    async addToGoals(amount) {
+
+        const goals = await this._db.get_all('user_goals', {'user': this.id});
+        if (goals) {
+            for (let goal of goals) {
+
+                // Add the words written to this goal.
+                let value = parseInt(amount) + goal.current;
+                if (value < 0) {
+                    value = 0;
+                }
+
+                // Is the goal already completed?
+                const already_completed = (goal.completed === 1);
+                let now_completed = false;
+
+                // If it is now completed and it wasn't before.
+                if (value >= goal.goal && !already_completed) {
+                    goal.completed = 1;
+                    now_completed = true;
+                }
+
+                // Update the goal record.
+                goal.current = value;
+                await this._db.update('user_goals', goal);
+
+                // If we just met the goal, add the XP.
+                if (now_completed) {
+
+                    // Increment goals completed stat.
+                    await this.addStat(goal.type + '_goals_completed', 1);
+
+                    // Increment XP.
+                    await this.addXP(Experience.XP_COMPLETE_GOAL[goal.type]);
+
+                    // Print message saying they've completed the goal.
+                    await this.say(`${this.getMention()} has met their ${goal.type} goal of ${goal.goal} words!     +${Experience.XP_COMPLETE_GOAL[goal.type]}xp`)
+
+                }
+
+            }
         }
 
     }

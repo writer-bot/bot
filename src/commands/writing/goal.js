@@ -139,7 +139,7 @@ module.exports = {
      */
     async execute(interaction, client, db) {
 
-        const user = new User(interaction.user.id, interaction.user.username, db, interaction);
+        const user = new User(interaction.user.id, db, interaction);
         const subCommand = interaction.options.getSubcommand();
 
         // Defer the reply.

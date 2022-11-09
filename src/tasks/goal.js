@@ -20,7 +20,7 @@ const func = async (client, db, task) => {
             for (let row of records) {
 
                 // Get the user whose goal this is.
-                const user = new User(row.user, null, db);
+                const user = new User(row.user, db);
                 await user.resetGoal(row);
                 completed++;
 
