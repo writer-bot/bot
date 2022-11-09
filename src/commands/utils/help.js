@@ -5,11 +5,11 @@ require('dotenv').config();
 module.exports = {
 
     data: new SlashCommandBuilder()
-        .setName('invite')
-        .setDescription('Generates a link to invite the bot to one of your servers'),
+        .setName('help')
+        .setDescription('Help with how to use the bot and its commands'),
 
     /**
-     * Execute the invite command
+     * Execute the help command
      * @param interaction
      * @param client
      * @returns {Promise<void>}
@@ -22,9 +22,9 @@ module.exports = {
         // Build embedded message with invite link.
         const embed = new EmbeddedMessage(interaction.user)
             .build({
-                title: 'Invite link',
-                description: 'Use the above link to invite the bot to your servers',
-                url: process.env.INVITE_URL,
+                title: 'Help',
+                description: 'Use the above link to access the bot Wiki for help with commands',
+                url: process.env.WIKI_URL,
             });
 
         await interaction.editReply({ embeds: [embed] });
