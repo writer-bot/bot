@@ -60,7 +60,8 @@ class Helper {
         const hoursStr = Helper.makeHumanReadable(hours, 'hour');
         const daysStr = Helper.makeHumanReadable(days, 'day');
 
-        return `${daysStr}${hoursStr}${minutesStr}${secondsStr}`.replace(/,\s*$/, '');
+        const str = `${daysStr}${hoursStr}${minutesStr}${secondsStr}`.replace(/,\s*$/, '');
+        return (str !== '') ? str : '0 seconds';
 
     }
 

@@ -485,10 +485,11 @@ class User {
     /**
      * Get a specific setting for the user
      * @param setting
+     * @param guild_id
      * @returns {Promise<*>}
      */
-    async getSetting(setting) {
-        return await this._db.get('user_settings', {'user': this.id, 'setting': setting});
+    async getSetting(setting, guild_id = null) {
+        return await this._db.get('user_settings', {'user': this.id, 'setting': setting, 'guild': guild_id});
     }
 
     /**
@@ -496,20 +497,32 @@ class User {
      * @returns {Promise<number|*>}
      * @param setting
      * @param value
+     * @param guild_id
      */
-    async updateSetting(setting, value) {
+    async updateSetting(setting, value, guild_id = null) {
 
-        const record = await this.getSetting(setting);
+        const record = await this.getSetting(setting, guild_id);
 
         if (record) {
             record.value = value;
             return await this._db.update('user_settings', record);
         } else {
             return await this._db.insert('user_settings', {
-                'user': this.id, 'setting': setting, 'value': value
+                'user': this.id, 'setting': setting, 'guild': guild_id, 'value': value
             });
         }
 
+    }
+
+    /**
+     * Get the user's most recent sprint, not including current one.
+     * @param sprint_id
+     * @returns {Promise<{length}|*|boolean>}
+     */
+    async getMostRecentSprint(sprint_id) {
+        return await this._db.get_sql('SELECT * FROM sprint_users WHERE user = ? AND sprint != ? ORDER BY id DESC', [
+            this.id, sprint_id
+        ])
     }
 
     /**
