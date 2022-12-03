@@ -7,7 +7,7 @@ module.exports = {
         .setDescription('Flip a coin'),
 
     /**
-     * Execute the help command
+     * Execute the flip command
      * @param interaction
      * @param client
      * @returns {Promise<void>}
