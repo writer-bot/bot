@@ -37,10 +37,13 @@ module.exports = {
         if (dice) {
 
             //Make sure the format is correct.
-            try {
+            //Use regex to validate the format
+            const re = /\d+d\d+/g;
+            if (re.test(dice)) {
                 rolls = parseInt(dice.split('d')[0], 10);
                 sides = parseInt(dice.split('d')[1], 10);
-            } catch (error) {
+            }
+            else {
                 await interaction.editReply({ content:  `Dice option must be in format #d# (e.g. 1d6 or 2d20)`});     
                 return;
             }
@@ -50,7 +53,7 @@ module.exports = {
         if (sides < 1)
             sides = 1;
         else if (sides > ROLL_MAX_SIDES)
-            sides = self.ROLL_MAX_SIDES;
+            sides = ROLL_MAX_SIDES;
 
         if (rolls < 1)
             rolls = 1;
