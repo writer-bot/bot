@@ -23,21 +23,21 @@ module.exports = {
 
     async execute(interaction, client) {
 
-        //Defer the reply
+        // Defer the reply.
         await interaction.deferReply();
 
-        //Set default rolls and sides
-        var rolls = 1;
-        var sides = 6;
+        // Set default rolls and sides.
+        let rolls = 1;
+        let sides = 6;
 
-        //Read the input by user
+        // Read the input by user.
         const dice = interaction.options.getString('dice');
 
-        //If input is not empty check the format.
+        // If input is not empty check the format.
         if (dice) {
 
-            //Make sure the format is correct.
-            //Use regex to validate the format
+            // Make sure the format is correct.
+            // Use regex to validate the format.
             const re = /\d+d\d+/g;
             if (re.test(dice)) {
                 rolls = parseInt(dice.split('d')[0], 10);
@@ -49,7 +49,7 @@ module.exports = {
             }
         }
 
-        //Make sure the sides and rolls are valid.
+        // Make sure the sides and rolls are valid.
         if (sides < 1)
             sides = 1;
         else if (sides > ROLL_MAX_SIDES)
@@ -60,12 +60,12 @@ module.exports = {
         else if (rolls > ROLL_MAX_ROLLS)
             rolls = ROLL_MAX_ROLLS
 
-        var total = 0;
-        var output = '';
+        let total = 0;
+        let output = '';
 
-        //Roll the dice {rolls} amount of times.
-        for (var x = 1; x <= rolls; x++) {
-            //generate a radnom number between 1 and {sides}
+        // Roll the dice {rolls} amount of times.
+        for (let x = 1; x <= rolls; x++) {
+            // Generate a radnom number between 1 and {sides}.
             const val = Math.floor(Math.random() * sides + 1);
             
             total += val;
@@ -75,7 +75,7 @@ module.exports = {
 
         output += `\n**Total: ${total}**`
 
-        //send the reply
+        // Send the reply.
         await interaction.editReply({ content:  output});
     }
 }

@@ -15,14 +15,14 @@ module.exports = {
 
     async execute(interaction, client){
 
-        //Defer the reply
+        // Defer the reply.
         await interaction.deferReply();
 
-        //generate a random number of either 0 or 1
+        // Generate a random number of either 0 or 1.
         const rand = Math.round(Math.random());
-        const side = rand == 0 ? 'heads' : 'tails';
+        const side = rand === 0 ? 'heads' : 'tails';
 
-        //send the reply
+        // Send the reply.
         await interaction.editReply({ content:  `It landed on ${side}!`});
 
     }

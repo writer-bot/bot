@@ -44,17 +44,17 @@ module.exports = {
     */
 
     async execute(interaction, client){
-
-        //Defer the reply
+ 
+        // Defer the reply.
         await interaction.deferReply();
 
         const question = interaction.options.getString('question');
 
-        //choose an answer randomly
+        // Choose an answer randomly.
         const max = EIGHT_BALL_ANSWERS.length;
         const answer = EIGHT_BALL_ANSWERS[Math.floor(Math.random() * max)];
 
-        //send the reply
-        await interaction.editReply({ content:  `<@${interaction.user.id}>, You asked the magic 8-ball: **${question}**\n\n*${answer}*`});     
+        // Send the reply.
+        await interaction.editReply({ content:  `${interaction.user}, You asked the magic 8-ball: **${question}**\n\n*${answer}*`});     
     }
 }

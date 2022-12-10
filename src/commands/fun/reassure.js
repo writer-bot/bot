@@ -21,24 +21,24 @@ module.exports = {
 
     async execute(interaction, client) {
 
-        //Defer the reply
+        // Defer the reply.
         await interaction.deferReply();
 
-        var mention='';
+        let mention = '';
 
         if (interaction.options.getUser('who'))
             mention = interaction.options.getUser('who');
         else
-            mention = `<@${interaction.user.id}>`;
+            mention = interaction.user;
 
-        //get the reassure msgs from JSON assets
+        // Get the reassure msgs from JSON assets.
         const messages = Helper.getJSONAsset('reassure');
 
-        //get a random number between 0 and {messages} length and pick a random msg
+        // Get a random number between 0 and {messages} length and pick a random msg.
         const rand = Math.floor(Math.random() * messages.length);
         const quote = messages[rand];
 
-        //send the reply
+        // Send the reply.
         await interaction.editReply({ content:  `${mention}, ${quote}`});
     }
 }
