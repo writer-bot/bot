@@ -86,6 +86,35 @@ class Helper {
         return (!isNaN(parseInt(value)));
     }
 
+    /**
+     * Send a message either as an interaction response, or via the client if done from a task.
+     * @param message
+     * @param interaction
+     * @param client
+     * @param channelID
+     * @returns {Promise<awaited Promise<Message<BooleanCache<Cached>>> | Promise<Message<BooleanCache<Cached>>> | Promise<Message<BooleanCache<Cached>>>>}
+     */
+    static async say(message, interaction = null, client = null, channelID = null) {
+
+        // If the interaction property is not false, that means we are responding to a command.
+        if (interaction !== null) {
+            return await interaction.followUp(message);
+        } else if (client !== null) {
+
+            // If the client property is not false, that means we are running a task and passed the whole client in.
+            await client.cluster.broadcastEval(async (client, {chID, message}) => {
+                let channel = await client.channels.cache.get(chID);
+                if (channel) {
+                    return channel.send(message);
+                }
+            }, {context: {chID: channelID, message: message}});
+
+        } else {
+            console.error('[ERROR] Cannot send message ('+message+'). Neither interaction or client object present.');
+        }
+
+    }
+
 }
 
 module.exports = Helper;

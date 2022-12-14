@@ -1,6 +1,9 @@
 const { PermissionsBitField } = require('discord.js');
 const Helper = require('./helper');
 const User = require('./user');
+const Guild = require('./guild');
+const Task = require('./task');
+const Experience = require('./experience');
 
 class Sprint {
 
@@ -21,11 +24,11 @@ class Sprint {
         this._db = db;
         this.id = record.id;
         this.guild = parseInt(record.guild);
-        this.channel = parseInt(record.channel);
-        this.start = record.start;
-        this.end = record.end;
-        this.end_reference = record.end_reference;
-        this.length = record.length;
+        this.channel = record.channel;
+        this.start = parseInt(record.start);
+        this.end = parseInt(record.end);
+        this.end_reference = parseInt(record.end_reference);
+        this.length = parseInt(record.length);
         this.createdby = record.createdby;
         this.created = record.created;
         this.completed = record.completed;
@@ -36,7 +39,7 @@ class Sprint {
      * @returns {boolean}
      */
     isComplete() {
-        return (this.completed === 1);
+        return (this.completed > 0);
     }
 
     /**
@@ -54,11 +57,11 @@ class Sprint {
      */
     async isDeclarationFinished() {
 
-        const results = this._db.get_all_sql('SELECT * FROM sprint_users WHERE sprint = ? AND ending_wc = 0 AND (sprint_type IS NULL OR sprint_type != ?)', [
+        const results = await this._db.get_all_sql('SELECT * FROM sprint_users WHERE sprint = ? AND ending_wc = 0 AND (sprint_type IS NULL OR sprint_type != ?)', [
             this.id, 'no-wordcount'
         ]);
 
-        return (results.length === 0);
+        return (results === false || results.length === 0);
 
     }
 
@@ -120,7 +123,8 @@ class Sprint {
         await this._db.delete('sprint_users', {'sprint': this.id});
         await this._db.delete('sprints', {'id': this.id});
 
-        // TODO: Cancel task.
+        // Cancel any tasks for this sprint.
+        await Task.cancel(this._db, 'sprint', this.id);
 
         // Decrement sprints created stat for creator.
         const creator = new User(this.createdby, this._db);
@@ -129,25 +133,349 @@ class Sprint {
     }
 
     /**
+     * Update the sprint record
+     * @param params
+     * @returns {Promise<void>}
+     */
+    async update(params) {
+        params['id'] = this.id;
+        await this._db.update('sprints', params);
+    }
+
+    /**
+     * Complete the sprint and run all calculations and updates
+     * @param interaction
+     * @param client
+     * @returns {Promise<ShardEvents.Message<BooleanCache<Cached>>>}
+     */
+    async complete_sprint(interaction = null, client = null) {
+
+        // If the sprint has already completed, just stop.
+        if (this.isComplete()) {
+            return;
+        }
+
+        // Print the "Results coming" message.
+        await Helper.say(`The word counts are in. Results coming up shortly...`, interaction, client, this.channel);
+
+        // Mark the sprint as completed in the database.
+        const now = Helper.getUnixTimestamp();
+        await this.update({
+            'completed': now
+        });
+
+        const results = [];
+
+        // Build the array of results.
+        const users = await this.getUsers();
+        for (const user_id of users) {
+
+            const user = new User(user_id, this._db, interaction);
+
+            // Set the client and channel in case any level-up messages need to be sent from user class.
+            user.setClient(client);
+            user.setChannel(this.channel);
+
+            const user_sprint = await this.getUser(user.id);
+
+            // If they are sprinting as a non-wordcount user, we don't need to do anything with their word count.
+            if (user_sprint.sprint_type === 'no-wordcount') {
+
+                // Just give them their XP and stats.
+                await user.addXP(Experience.XP_COMPLETE_SPRINT);
+                await user.addStat('sprints_completed', 1);
+
+                // Push them to the results array.
+                results.push({
+                    'user': user,
+                    'wordcount': 0,
+                    'xp': Experience.XP_COMPLETE_SPRINT,
+                    'type': user_sprint.sprint_type,
+                });
+
+            } else {
+
+                // Otherwise, they are a normal sprinter, so we want to calculate some stuff.
+                // If they didn't submit an ending word count, use their current one.
+                if (user_sprint.ending_wc === 0) {
+                    user_sprint.ending_wc = user_sprint.current_wc;
+                    await this.updateUser(user.id, false, false, user_sprint.ending_wc);
+                }
+
+                // Convert all word counts and time to ints for easier comparisons.
+                user_sprint.starting_wc = parseInt(user_sprint.starting_wc);
+                user_sprint.current_wc = parseInt(user_sprint.current_wc);
+                user_sprint.ending_wc = parseInt(user_sprint.ending_wc);
+                user_sprint.timejoined = parseInt(user_sprint.timejoined);
+
+                // We only process their result if they have declared something, and it's different to their starting word count.
+                if (user_sprint.ending_wc > 0 && user_sprint.ending_wc !== user_sprint.starting_wc) {
+
+                    // Get their word count from their ending declaration.
+                    let word_count = user_sprint.ending_wc - user_sprint.starting_wc;
+
+                    // Get the actual time the user sprinted, based on their join time.
+                    let time_sprinted = this.end_reference - user_sprint.timejoined;
+
+                    // If for some reason the timejoined or sprint end_reference is 0, use the defined sprint length.
+                    if (user_sprint.timejoined <= 0 || this.end_reference <= 0) {
+                        time_sprinted = parseInt(this.length);
+                    }
+
+                    // Calculate their WPM based on their time sprinted.
+                    let wpm = this.calculateWPM(word_count, time_sprinted);
+
+                    // See if it's a new WPM record for the user.
+                    let is_new_record = false;
+                    const record = await user.getRecord('wpm');
+                    if (!record || wpm > parseInt(record.value)) {
+                        is_new_record = true;
+                        await user.updateRecord('wpm', wpm);
+                    }
+
+                    // Give them their XP for finishing the sprint.
+                    await user.addXP(Experience.XP_COMPLETE_SPRINT);
+
+                    // Increment their stats.
+                    await user.addStat('sprints_completed', 1);
+                    await user.addStat('sprints_words_written', word_count);
+                    await user.addStat('total_words_written', word_count);
+
+                    // TODO project stuff.
+
+                    // Push them to the results array.
+                    results.push({
+                        'user': user,
+                        'wordcount': word_count,
+                        'wpm': wpm,
+                        'wpm_record': null,
+                        'xp': Experience.XP_COMPLETE_SPRINT,
+                        'type': user_sprint.sprint_type,
+                    });
+
+
+                }
+
+            }
+
+        }
+
+        // Now we sort the users into the leaderboard.
+        results.sort((a, b) => b.wordcount - a.wordcount);
+
+        // Loop through them and apply extra XP for the top positions.
+        let position = 1;
+        let best_word_count = 0;
+
+        for (const result of results) {
+
+            // We use this variable, instead of just checking position, in case there is a tie for 1st place.
+            if (result.wordcount > best_word_count) {
+                best_word_count = result.wordcount;
+            }
+
+            // Are they the sprint winner? (Can be a tie, so based on word count, not position).
+            const is_winner = result.wordcount === best_word_count;
+
+            // If they finished in the top 5 (and weren't the only one sprinting), earn extra XP.
+            if (position <= 5 && results.length > 1) {
+
+                // If they are the sprint winner (can be a tie) use modifier of first place.
+                let position_modifier = position;
+                if (is_winner) {
+                    position_modifier = 1;
+                }
+
+                // Add the extra xp to the result and the database.
+                const extra_xp = Math.ceil(Experience.XP_WIN_SPRINT / position_modifier);
+                result.xp += extra_xp;
+                await result.user.addXP(extra_xp);
+
+            }
+
+            // If they won the sprint, increment their win stat.
+            if (is_winner) {
+                await result.user.addStat('sprints_won', 1);
+            }
+
+            // Increment position.
+            position += 1;
+
+        }
+
+        // Post the final message with the results.
+        let message = '';
+        if (results.length > 0) {
+
+            message = `:trophy: **Sprint results** :trophy:\nCongratulations to everyone.\n`;
+            position = 1;
+
+            for (const result of results) {
+
+                // Non-word count sprinters just display their XP gain.
+                if (result.type === 'no-wordcount') {
+                    message += `${result.user.getMention()}\t\t+${result.xp} xp`;
+                } else {
+                    // Everyone else, display their position and WPM as well.
+                    message += `${position}. ${result.user.getMention()} - **${result.wordcount} words** (${result.wpm} wpm)\t\t+${result.xp} xp`;
+                    if (result.wpm_record) {
+                        message += `\t\t:champagne: **NEW PB**`;
+                    }
+                }
+
+                message += '\n';
+                position += 1;
+
+            }
+
+        } else {
+            message = `No-one submitted their word counts... I guess I'll just cancel the sprint then... :frowning:`;
+        }
+
+        return await Helper.say(message, interaction, client, this.channel);
+
+    }
+
+    /**
+     * End the current sprint
+     * @param interaction
+     * @param client
+     * @returns {Promise<void>}
+     */
+    async end_sprint(interaction = null, client = null) {
+
+        // Mark the sprint as ended in the database.
+        await this.update({'end': 0});
+
+        // Get the users to notify.
+        const mentions = await this.getMentions();
+
+        // How long do they have to submit their word counts?
+        const guild = new Guild(this.guild, this._db);
+        let delay = await guild.getSetting('sprint_delay_end');
+        if (delay) {
+            delay = parseInt(delay.value);
+        } else {
+            delay = Sprint.DEFAULT_POST_DELAY;
+        }
+
+        // Print the end message.
+        let message = `**Time is up**\nPens down. Use \`/sprint wc amount:<amount>\` to submit your final word counts, you have ${delay} minute(s).`;
+        message += `\n:bell: ${mentions.join(', ')}`;
+        await Helper.say(message, interaction, client, this.channel);
+
+        // If everyone is declared, just finish without waiting.
+        if (await this.isDeclarationFinished()) {
+            return await this.complete_sprint(interaction);
+        }
+
+        // Schedule a task to complete the sprint.
+        const now = Helper.getUnixTimestamp();
+        const task_time = now + (delay * 60);
+        await Task.create(this._db, 'complete', task_time, 'sprint', this.id);
+
+    }
+
+    /**
+     * Post the message to say a sprint has been scheduled.
+     * @param interaction
+     * @returns {Promise<ShardEvents.Message<BooleanCache<Cached>>|Promise<ShardEvents.Message<BooleanCache<Cached>>>>}
+     */
+    async post_delayed_start(interaction) {
+
+        const now = Helper.getUnixTimestamp();
+        const delay = Helper.formatSecondsToDays(this.start - now);
+        let message = `**A new sprint has been scheduled**\nSprint will start in approx ${delay} and will run for ${this.length} minute(s). Use \`/sprint join\` to join this sprint.`;
+
+        // Notify users.
+        const notify = await this.getMentions(true);
+        message += `\n:bell: ${notify.join(', ')}`;
+
+        return Helper.say(message, interaction, null);
+
+    }
+
+    /**
+     * Post the sprint start message.
+     * @param client
+     * @param interaction
+     * @param immediate
+     * @returns {Promise<ShardEvents.Message<BooleanCache<Cached>>|Promise<ShardEvents.Message<BooleanCache<Cached>>>>}
+     */
+    async post_start(interaction = null, client = null, immediate = false) {
+
+        // Build the message.
+        let message = `**Sprint has started**\nGet writing! You have ${this.length} minute(s).`;
+
+        // Notify users who joined the sprint that it is starting.
+        const mentions = await this.getMentions();
+        message += `\n:bell: ${mentions.join(', ')}`;
+
+        // Notify users who asked to be notified.
+        if (immediate) {
+            const notify = await this.getMentions(true);
+            message += `\n:bell: ${notify.join(', ')}`;
+        }
+
+        return Helper.say(message, interaction, client, this.channel);
+
+    }
+
+    /**
      * Get the users who are sprinting in this sprint
      * @returns {Promise<{length}|*|boolean>}
      */
     async getUsers() {
-        return await this._db.get_all('sprint_users', {'sprint': this.id}, ['user']);
+        const users = await this._db.get_all('sprint_users', {'sprint': this.id}, ['user']);
+        let user_ids = [];
+        for (const user of users) {
+            user_ids.push(user.user);
+        }
+        return user_ids;
+    }
+
+    /**
+     * Get an array of the users to notify about new sprints.
+     * @returns {Promise<*[]>}
+     */
+    async getNotifyUsers() {
+
+        // First get the IDs of all the users actually on the sprint.
+        const user_ids = await this.getUsers();
+
+        // Then get the IDs of the users who want to be notified of sprints on this server.
+        const notify_users = await this._db.get_all('user_settings', {'guild': this.guild, 'setting': 'sprint_notify', 'value': 1});
+        let notify_ids = [];
+        for (const notify_user of notify_users) {
+            notify_ids.push(notify_user.user);
+        }
+
+        // Return the users who want notifications, but who are not already on the sprint.
+        return notify_ids.filter((e) => user_ids.indexOf(e) === -1);
+
     }
 
     /**
      * Get an array of mentions for the users in this sprint
+     * @param notify
      * @returns {Promise<[]>}
      */
-    async getMentions() {
+    async getMentions(notify = false) {
 
-        const users = await this.getUsers();
+        let users;
+
+        // Are we getting mentions for users who want notifications? Or users on the sprint?
+        if (notify) {
+            users = await this.getNotifyUsers();
+        } else {
+            users = await this.getUsers();
+        }
+
         const mentions = [];
 
         if (users) {
-            for (const user of users) {
-                let obj = new User(user.user);
+            for (const user_id of users) {
+                let obj = new User(user_id);
                 mentions.push(obj.getMention());
             }
         }
@@ -222,25 +550,31 @@ class Sprint {
      * @returns {number}
      */
     calculateWPM(words, seconds) {
-        return Math.round(words /(seconds / 60), 1);
+
+        // If they sprint for less than a minute, it can create odd wpm results.
+        if (seconds < 60) {
+            seconds = 60;
+        }
+
+        return Math.ceil(words /(seconds / 60), 1);
+
     }
 
     /**
      * Declare a word count for the user in the sprint
      * @param interaction
      * @param db
-     * @param sprint
      * @param user
      * @param user_sprint
      * @param amount
      * @returns {Promise<Message<BooleanCache<CacheType>>>}
      */
-    async setUserWordCount(interaction, db, sprint, user, user_sprint, amount) {
+    async setUserWordCount(interaction, db, user, user_sprint, amount) {
 
         // Before we update it, see if the WPM exceeds their max setting, in which case it's probably an error.
         const written = amount - parseInt(user_sprint.starting_wc);
-        const writing_time = parseInt(sprint.end_reference) - parseInt(user_sprint.timejoined);
-        const wpm = sprint.calculateWPM(written, writing_time);
+        const writing_time = parseInt(this.end_reference) - parseInt(user_sprint.timejoined);
+        const wpm = this.calculateWPM(written, writing_time);
 
         // Does the user have a setting for this?
         let max_wpm;
@@ -257,18 +591,18 @@ class Sprint {
         }
 
         // Update the user's sprint record.
-        if (sprint.isFinished()) {
-            await sprint.updateUser(user.id, false, false, amount);
+        if (this.isFinished()) {
+            await this.updateUser(user.id, false, false, amount);
         } else {
-            await sprint.updateUser(user.id, false, amount)
+            await this.updateUser(user.id, false, amount)
         }
 
         // Reload the user's sprint record.
-        user_sprint = await sprint.getUser(user.id);
+        user_sprint = await this.getUser(user.id);
 
         // Which value are we displaying? Current or ending?
         let wc;
-        if (sprint.isFinished()) {
+        if (this.isFinished()) {
             wc = user_sprint.ending_wc;
         } else {
             wc = user_sprint.current_wc;
@@ -276,7 +610,11 @@ class Sprint {
 
         await interaction.editReply(`${user.getMention()}, you updated your word count to **${wc}**. Total words written in this sprint: **${written}**`);
 
-        // TODO: Task stuff.
+        // If everyone has now declared, we don't need to wait for the task, we can complete now.
+        if (this.isFinished() && await this.isDeclarationFinished()) {
+            await Task.cancel(db, 'sprint', this.id);
+            await this.complete_sprint(interaction);
+        }
 
     }
 
@@ -342,8 +680,14 @@ class Sprint {
         // Increment the user's statistic for sprints created.
         await user.addStat('sprints_started', 1);
 
-        // TODO: Task setup.
-
+        // Are we starting immediately?
+        if (delay <= 0) {
+            await Task.create(db, 'end', end_time, 'sprint', new_sprint.id)
+            return await new_sprint.post_start(interaction, null, true);
+        } else {
+            await Task.create(db, 'start', start_time, 'sprint', new_sprint.id);
+            return await new_sprint.post_delayed_start(interaction);
+        }
 
     }
 
@@ -463,7 +807,7 @@ class Sprint {
         }
 
         const new_amount = amount + parseInt(record.current_wc);
-        return sprint.setUserWordCount(interaction, db, sprint, user, record, new_amount);
+        return sprint.setUserWordCount(interaction, db, user, record, new_amount);
 
     }
 
@@ -504,11 +848,11 @@ class Sprint {
             return await interaction.editReply(`${user.getMention()}, word count **${amount}** is less than the word count you started with (**${record.starting_wc}**)!\nIf you joined with a starting word count, make sure to declare your new TOTAL word count, not just the amount you wrote in this sprint.\nIf you really are trying to lower your word count for this sprint, please run: \`/sprint wrote -${diff}\` instead, to decrement your current word count.`);
         }
 
-        return sprint.setUserWordCount(interaction, db, sprint, user, record, amount);
+        return sprint.setUserWordCount(interaction, db, user, record, amount);
 
     }
 
-        /**
+    /**
      * Run the join command
      * @param interaction
      * @param db
@@ -620,6 +964,42 @@ class Sprint {
     }
 
     /**
+     * Run the end command
+     * @param interaction
+     * @param db
+     * @param sprint
+     * @param user
+     * @returns {Promise<Message<BooleanCache<CacheType>>>}
+     */
+    static async command_end(interaction, db, sprint, user) {
+
+        // Try the common checks to see if they pass.
+        if (!await this.commonChecks(interaction, sprint, user)) {
+            return;
+        }
+
+        // Sprint must have started.
+        if (!await this.commonHasStartedChecks(interaction, sprint, user)) {
+            return;
+        }
+
+        // Do they have permission to end this sprint? (Sprint creator or MANAGE_MESSAGES permission).
+        if (parseInt(sprint.createdby) !== parseInt(user.id) && !interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+            return await interaction.editReply(`${user.getMention()}, you do not have permission to end this sprint early.`);
+        }
+
+        // Update sprint end reference.
+        await sprint.update({'end_reference': Helper.getUnixTimestamp()});
+
+        // Cancel any pending tasks for this sprint.
+        await Task.cancel(db, 'sprint', sprint.id);
+
+        // Run the end bits to ask for word counts.
+        return await sprint.end_sprint(interaction, null);
+
+    }
+
+    /**
      * Run the notify command to change getting notifications or not
      * @param interaction
      * @param db
@@ -643,7 +1023,59 @@ class Sprint {
 
     }
 
-        /**
+    /**
+     * Run the pb command
+     * @param interaction
+     * @param db
+     * @param sprint
+     * @param user
+     * @returns {Promise<Message<BooleanCache<CacheType>>>}
+     */
+    static async command_pb(interaction, db, sprint, user) {
+
+        // Do they have a pb?
+        const pb = await user.getRecord('wpm');
+        if (pb) {
+            return await interaction.editReply(`${user.getMention()}, your personal best is **${pb.value}** wpm.`);
+        } else {
+            return await interaction.editReply(`${user.getMention()}, you do not yet have a wpm personal best. Get sprinting if you want one!`);
+        }
+
+    }
+
+    /**
+     * Run the purge command to remove notifications of users not in the server any more.
+     * @param interaction
+     * @param db
+     * @param sprint
+     * @param user
+     * @param who
+     * @returns {Promise<Message<BooleanCache<CacheType>>>}
+     */
+    static async command_purge(interaction, db, sprint, user, who) {
+
+        // Do they have permission to remove people? (MANAGE_MESSAGES permission).
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+            return await interaction.editReply(`${user.getMention()}, you do not have permission to remove people from notifications list.`);
+        }
+
+        // User must exist - shouldn't get here is the user option type works.
+        if (!who) {
+            return await interaction.editReply(`${user.getMention()}, unable to find that user.`);
+        }
+
+        // Delete the setting for that user on this guild.
+        await db.delete('user_settings', {
+            'user': who.id,
+            'guild': interaction.guildId,
+            'setting': 'sprint_notify'
+        });
+
+        return await interaction.editReply(`${user.getMention()}, user removed from sprint notifications.`);
+
+    }
+
+    /**
      * Common checks for anything which requires the sprint exists, prints error if it doesn't exist
      * @param interaction
      * @param sprint
@@ -745,6 +1177,21 @@ class Sprint {
             return false;
         }
 
+    }
+
+    /**
+     * Get a sprint object by its ID
+     * @param db
+     * @param id
+     * @returns {Promise<Sprint|boolean>}
+     */
+    static async get(db, id) {
+        const record = await db.get('sprints', {'id': id});
+        if (record) {
+            return new Sprint(record, db);
+        } else {
+            return false;
+        }
     }
 
 }

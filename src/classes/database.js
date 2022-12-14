@@ -121,6 +121,7 @@ class DB {
      * Build the update
      * @param table
      * @param params
+     * @param where
      * @returns {Promise<boolean|any>}
      * @private
      */
@@ -238,6 +239,7 @@ class DB {
      * Delete a record from a table
      * @param table
      * @param params
+     * @param where
      * @returns {Promise<number>}
      */
     async update(table, params, where = null) {

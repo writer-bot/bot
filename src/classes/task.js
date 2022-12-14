@@ -2,6 +2,7 @@ const Goal = require('./goal');
 const logger = require('./../utils/logger');
 const DB = require('./database');
 const Helper = require('../classes/helper');
+const task = require("../tasks/goal");
 
 class Task {
 
@@ -69,6 +70,41 @@ class Task {
     }
 
     /**
+     * Cancel tasks of a given object
+     * @param db
+     * @param object
+     * @param object_id
+     * @returns {Promise<*>}
+     */
+    static async cancel(db, object, object_id) {
+        return db.delete('tasks', {'object': object, 'objectid': object_id});
+    }
+
+    /**
+     * Create a new task (or update the time if it already exists)
+     * @param db
+     * @param type
+     * @param time
+     * @param object
+     * @param object_id
+     * @returns {Promise<number|*>}
+     */
+    static async create(db, type, time, object, object_id) {
+
+        // Does the record already exist?
+        let record = await db.get('tasks', {'type': type, 'object': object, 'objectid': object_id});
+        if (record) {
+            // Update the time of the task.
+            record.time = time;
+            return await db.update('tasks', record);
+        } else {
+            // Insert a new task.
+            return await db.insert('tasks', {'type': type, 'time': time, 'object': object, 'objectid': object_id});
+        }
+
+    }
+
+    /**
      * Run the task
      * @returns {Promise<boolean>}
      */
@@ -92,6 +128,11 @@ class Task {
             const task = require('./../tasks/goal');
             result = await task(this._client, this._db, this);
 
+        } else if (this.object === 'sprint') {
+
+            const task = require('./../tasks/sprint');
+            result = await task(this._client, this._db, this);
+
         } else {
             logger.error('[TASK] Invalid task object: ' + this.object);
         }
@@ -100,7 +141,7 @@ class Task {
         if (result && !this.isRecurring()) {
             await this.delete();
         } else {
-            // Otherwise, set it's processing status to 0.
+            // Otherwise, set its processing status to 0 to try again.
             await this.setProcessing(0);
         }
 

@@ -27,6 +27,10 @@ module.exports = {
                 .setDescription('Cancel the current writing sprint')
         )
         .addSubcommand(subcommand =>
+            subcommand.setName('end')
+                .setDescription('End the current writing sprint early')
+        )
+        .addSubcommand(subcommand =>
             subcommand.setName('leave')
                 .setDescription('Leave the current writing sprint')
         )
@@ -101,6 +105,20 @@ module.exports = {
                         .setRequired(true)
                 )
         )
+        .addSubcommand(subcommand =>
+            subcommand.setName('pb')
+                .setDescription('Check your personal best WPM for all sprints')
+        )
+        .addSubcommand(subcommand =>
+            subcommand.setName('purge')
+                .setDescription('Remove a user from getting sprint notifications')
+                .addUserOption((option) =>
+                    option.setName('user')
+                        .setDescription('(If they are not in the list - right click their name from the sprint notifications and Copy ID)')
+                        .setRequired(true)
+                )
+        )
+        // TODO: purge, project, pb
         ,
 
     /**
@@ -135,6 +153,11 @@ module.exports = {
 
             // Cancel a sprint.
             return await Sprint.command_cancel(interaction, db, sprint, user);
+
+        } else if (subCommand === 'end') {
+
+            // Cancel a sprint.
+            return await Sprint.command_end(interaction, db, sprint, user);
 
         } else if (subCommand === 'leave') {
 
@@ -171,6 +194,17 @@ module.exports = {
             // Change sprint notifications for the user.
             const amount = interaction.options.getInteger('amount');
             return await Sprint.command_declare(interaction, db, sprint, user, amount);
+
+        } else if (subCommand === 'pb') {
+
+            // Check personal best WPM.
+            return await Sprint.command_pb(interaction, db, sprint, user);
+
+        } else if (subCommand === 'purge') {
+
+            // Purge old notification users.
+            const who = interaction.options.getUser('user');
+            return await Sprint.command_purge(interaction, db, sprint, user, who);
 
         }
 

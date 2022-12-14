@@ -4,12 +4,13 @@ const moment = require("moment/moment");
 
 class User {
 
-    constructor(id, db, interaction = false) {
+    constructor(id, db, interaction = null) {
         this._db = db;
         this.id = id;
         this.stats = {};
-        this._client = false;
+        this._client = null;
         this._interaction = interaction;
+        this._channel = null;
     }
 
     /**
@@ -21,22 +22,11 @@ class User {
     }
 
     /**
-     * Send a message, either as an interaction response or directly to a channel from a task
-     * @param message
-     * @returns {Promise<awaited Promise<Message<BooleanCache<Cached>>> | Promise<Message<BooleanCache<Cached>>> | Promise<Message<BooleanCache<Cached>>>>}
+     * Set the channel to use, if we try to send messages from tasks.
+     * @param channel
      */
-    async say(message) {
-
-        // If the interaction property is not false, that means we are responding to a command.
-        if (this._interaction !== false) {
-            return await this._interaction.followUp(message);
-        } else if (this._client !== false) {
-            // If the client property is not false, that means we are running a task and passed the whole client in.
-            // TODO:
-        } else {
-            console.error('[ERROR] Cannot send message. Neither interaction or client object present on User');
-        }
-
+    setChannel(channel) {
+        this._channel = channel;
     }
 
     /**
@@ -102,7 +92,7 @@ class User {
         // If it doesn't exist on the object, it hasn't been loaded yet.
         if (this.stats[name] === undefined) {
             let record = await this._db.get('user_stats', {'user': this.id, 'name': name});
-            if (record) {
+            if (record !== false) {
                 this.stats[name] = record.value;
             }
         }
@@ -111,7 +101,7 @@ class User {
         if (this.stats[name] !== undefined) {
             return this.stats[name];
         } else {
-            return 0;
+            return false;
         }
 
     }
@@ -147,7 +137,7 @@ class User {
         // Update the stats object on the user.
         this.stats[name] = amount;
 
-        if (stat) {
+        if (stat !== false) {
             return await this._db.update('user_stats', {'value': amount}, {'user': this.id, 'name': name});
         } else {
             return await this._db.insert('user_stats', {'user': this.id, 'name': name, 'value': amount});
@@ -206,7 +196,7 @@ class User {
 
         // Have they just hit a new level?
         if (user_xp.getLevel() > existing_level) {
-            await this.say(`:tada: Congratulations ${this.getMention()}, you are now **Level ${user_xp.getLevel()}**`);
+            await Helper.say(`:tada: Congratulations ${this.getMention()}, you are now **Level ${user_xp.getLevel()}**`, this._interaction, this._client, this._channel);
         }
 
     }
@@ -515,6 +505,38 @@ class User {
     }
 
     /**
+     * Get a user record
+     * @param name
+     * @param guild_id
+     * @returns {Promise<*>}
+     */
+    async getRecord(name) {
+        return await this._db.get('user_records', {'user': this.id, 'record': name});
+    }
+
+    /**
+     * Update a record for the user
+     * @returns {Promise<number|*>}
+     * @param record
+     * @param value
+     * @param guild_id
+     */
+    async updateRecord(record, value) {
+
+        const user_record = await this.getRecord(record);
+
+        if (user_record) {
+            user_record.value = value;
+            return await this._db.update('user_records', user_record);
+        } else {
+            return await this._db.insert('user_records', {
+                'user': this.id, 'record': record, 'value': value
+            });
+        }
+
+    }
+
+    /**
      * Get the user's most recent sprint, not including current one.
      * @param sprint_id
      * @returns {Promise<{length}|*|boolean>}
@@ -566,7 +588,7 @@ class User {
                     await this.addXP(Experience.XP_COMPLETE_GOAL[goal.type]);
 
                     // Print message saying they've completed the goal.
-                    await this.say(`${this.getMention()} has met their ${goal.type} goal of ${goal.goal} words!     +${Experience.XP_COMPLETE_GOAL[goal.type]}xp`)
+                    await Helper.say(`${this.getMention()} has met their ${goal.type} goal of ${goal.goal} words!     +${Experience.XP_COMPLETE_GOAL[goal.type]}xp`, this._interaction, this._client, this._channel);
 
                 }
 

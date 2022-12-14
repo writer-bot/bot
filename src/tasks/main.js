@@ -22,15 +22,6 @@ const cron = async function(client){
         }
     }
 
-    // let channelID = '727465366162374737';
-    //
-    // await client.cluster.broadcastEval(async (client, {chID}) => {
-    //     let channel = await client.channels.cache.get(chID);
-    //     if (channel) {
-    //         return channel.send('testing!');
-    //     }
-    // }, {context: {chID: channelID}});
-
     await db.end();
 
 };
