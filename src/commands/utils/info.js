@@ -16,7 +16,7 @@ module.exports = {
      * @param client
      * @returns {Promise<void>}
      */
-    async execute(interaction, client) {
+    async execute(interaction, client, db) {
 
         // Defer the reply.
         await interaction.deferReply();
@@ -37,13 +37,16 @@ module.exports = {
         fields.push({ name: 'Server Time', value: moment(now).format('DD-MMM-YYYY, HH:mm'), inline: true });
         fields.push({ name: 'Shard #', value: shardID.toString(), inline: true });
 
-        // TODO: Stats about sprints, etc...
+        const active_sprints = await db.get_sql('SELECT COUNT(id) as cnt FROM sprints WHERE completed = 0');
+        const completed_sprints = await db.get_sql('SELECT COUNT(id) as cnt FROM sprints WHERE completed > 0');
 
         Promise.all(promises).then(results => {
 
             let stats = [];
             stats.push(`- Total Servers: ${results[0].reduce((acc, guildCount) => acc + guildCount, 0)}`);
             stats.push(`- Total Users: ${results[1].reduce((acc, memberCount) => acc + memberCount, 0)}`);
+            stats.push(`- Total Active Sprints: ${parseInt(active_sprints.cnt)}`);
+            stats.push(`- Total Completed Sprints: ${parseInt(completed_sprints.cnt)}`);
             fields.push({ name: 'General Statistics', value: stats.join("\n") });
 
             // Build embedded message with bot info.
