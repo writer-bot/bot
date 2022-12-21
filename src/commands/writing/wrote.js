@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const User = require('../../classes/user');
+const Project = require('../../classes/project');
 
 module.exports = {
 
@@ -36,7 +37,28 @@ module.exports = {
         const project_shortname = interaction.options.getString('project');
         let message = '';
 
-        // TODO: Project stuff.
+        // Update project with written words.
+        if (project_shortname !== null) {
+
+            const project = await Project.get(db, user.id, project_shortname);
+            if (!project.is_valid()) {
+                return await interaction.editReply(`${user.getMention()}, you do not have a project with that name`);
+            }
+
+            // Increment project word count.
+            project.words += amount;
+            await project.save();
+
+            // Add to the message.
+            let written = await user.getStat('total_words_written');
+            if (written === null) {
+                written = 0;
+            }
+            let total = parseInt(written) + amount;
+
+            message += `added ${amount} to your project **${project.name} (${project.shortname})** (${project.words}) [${total}]`;
+
+        }
 
         // Add words.
         await user.addStat('total_words_written', amount);
@@ -47,7 +69,9 @@ module.exports = {
         // Update goals with added words written.
         await user.addToGoals(amount);
 
-        message += `added ${amount} to your total words written **(${total})**`;
+        if (message === '') {
+            message += `added ${amount} to your total words written **(${total})**`;
+        }
 
         return await interaction.editReply(`${user.getMention()}, ${message}`);
 

@@ -4,6 +4,7 @@ const User = require('./user');
 const Guild = require('./guild');
 const Task = require('./task');
 const Experience = require('./experience');
+const Project = require("./project");
 
 class Sprint {
 
@@ -241,7 +242,14 @@ class Sprint {
                     await user.addStat('sprints_words_written', word_count);
                     await user.addStat('total_words_written', word_count);
 
-                    // TODO project stuff.
+                    // If they were sprinting in a project, update its word count.
+                    if (user_sprint.project !== null) {
+                        const project = await Project.get_by_id(this._db, user_sprint.project);
+                        if (project.is_valid()) {
+                            project.words += word_count;
+                            await project.save();
+                        }
+                    }
 
                     // Push them to the results array.
                     results.push({
@@ -875,8 +883,18 @@ class Sprint {
             type = null;
         }
 
-        // TODO: Project stuff.
+        let project = null;
         let project_id = null;
+
+        // Get the project and make sure it exists.
+        if (project_shortname !== null) {
+            project = await Project.get(db, user.id, project_shortname);
+            if (!project.is_valid()) {
+                return await interaction.editReply(`${user.getMention()}, you do not have a project with that name`);
+            }
+            project_id = project.id;
+        }
+
 
         let message = '';
 
@@ -927,7 +945,10 @@ class Sprint {
             }
         }
 
-        // TODO: Append project message.
+        // If they joined with a project.
+        if (project !== null) {
+            message += ` You are sprinting in your project **${project.name}**`;
+        }
 
         return await interaction.editReply(`${user.getMention()}, ${message}`);
 
@@ -1076,6 +1097,39 @@ class Sprint {
     }
 
     /**
+     * Set the project to sprint in
+     * @param interaction
+     * @param db
+     * @param sprint
+     * @param user
+     * @param project_shortname
+     * @returns {Promise<void>}
+     */
+    static async command_project(interaction, db, sprint, user, project_shortname) {
+
+        // Try the common checks to see if they pass.
+        if (!await this.commonChecks(interaction, sprint, user)) {
+            return;
+        }
+
+        // User must be sprinting.
+        if (!await this.commonIsSprintingChecks(interaction, sprint, user)) {
+            return;
+        }
+
+        // Get the project and make sure it exists.
+        const project = await Project.get(db, user.id, project_shortname);
+        if (!project.is_valid()) {
+            return await interaction.editReply(`${user.getMention()}, you do not have a project with that name`);
+        }
+
+        // Set the project into their sprint record.
+        await sprint.updateUser(user.id, false, false, false, false, project.id);
+        return await interaction.editReply(`${user.getMention()}, you are now sprinting in your project **${project.name}**`);
+
+    }
+
+        /**
      * Common checks for anything which requires the sprint exists, prints error if it doesn't exist
      * @param interaction
      * @param sprint

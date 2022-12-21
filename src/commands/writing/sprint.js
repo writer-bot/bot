@@ -118,8 +118,15 @@ module.exports = {
                         .setRequired(true)
                 )
         )
-        // TODO: purge, project, pb
-        ,
+        .addSubcommand(subcommand =>
+            subcommand.setName('project')
+                .setDescription('Choose which of your projects you are sprinting in, to have the word count added to it')
+                .addStringOption((option) =>
+                    option.setName('shortname')
+                        .setDescription('Project shortname')
+                        .setRequired(true)
+                )
+        ),
 
     /**
      * Execute the sprint command
@@ -205,6 +212,12 @@ module.exports = {
             // Purge old notification users.
             const who = interaction.options.getUser('user');
             return await Sprint.command_purge(interaction, db, sprint, user, who);
+
+        } else if (subCommand === 'project') {
+
+            // Purge old notification users.
+            const shortname = interaction.options.getString('shortname');
+            return await Sprint.command_project(interaction, db, sprint, user, shortname);
 
         }
 

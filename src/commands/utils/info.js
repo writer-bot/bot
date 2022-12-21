@@ -14,6 +14,7 @@ module.exports = {
      * Execute the info command
      * @param interaction
      * @param client
+     * @param db
      * @returns {Promise<void>}
      */
     async execute(interaction, client, db) {
