@@ -118,7 +118,7 @@ module.exports = {
                         .setRequired(true)
                 )
         )
-        // TODO: purge, project, pb
+        // TODO: project
         ,
 
     /**

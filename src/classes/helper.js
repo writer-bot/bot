@@ -115,6 +115,20 @@ class Helper {
 
     }
 
+    /**
+     * Check if a string is a valid URL
+     * @param string
+     * @returns {boolean}
+     */
+    static isUrl(string) {
+        try {
+            new URL(string);
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+
 }
 
 module.exports = Helper;
