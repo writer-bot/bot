@@ -157,6 +157,24 @@ class User {
     }
 
     /**
+     * Get the XP bar for the user
+     * @returns {Promise<string>}
+     */
+    async getXPBar() {
+        const record = await this.getXP();
+
+        if (record) {
+            const level = record.getLevel();
+            const nextLevelXP = record.getNextLevelXP();
+            const xp = record['xp'];
+
+            const goal = xp + nextLevelXP;
+            return `**Level ${level}** (${xp}/${goal})`;
+        }
+        return 'None';
+    }
+    
+    /**
      * Add to the user's XP
      * @param amount
      * @returns {Promise<number|*>}
