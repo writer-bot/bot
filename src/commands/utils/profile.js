@@ -40,16 +40,16 @@ module.exports = {
         // Build the fields for the embedded message.
         let fields = [];
         fields.push({ name: 'Level (XP)', value: `${profile['lvlxp']}`, inline: true});
-        fields.push({ name: 'Words Written', value: `${profile['words'] ? profile['words'] : 'None'}`, inline: true});
-        fields.push({ name: 'Words Written in Sprints', value: `${profile['words_sprints'] ? profile['words_sprints'] : 'None'}`, inline: true});
-        fields.push({ name: 'Sprints Started', value: `${profile['sprints_started'] ? profile['sprints_started'] : 'None'}`, inline: true});
-        fields.push({ name: 'Sprints Completed', value: `${profile['sprints_completed'] ? profile['sprints_completed']: 'None'}`, inline: true});
-        fields.push({ name: 'Sprints Won', value: `${profile['sprints_won'] ? profile['sprints_won'] : 'None'}`, inline: true});
-        fields.push({ name: 'Challenges Completed', value: `${profile['challenges_completed'] ? profile['challenges_completed'] : 'None'}`, inline: true});
-        fields.push({ name: 'Daily Goals Completed', value: `${profile['daily_goals_completed'] ? profile['daily_goals_completed'] : 'None'}`, inline: true});
-        fields.push({ name: 'Weekly Goals Completed', value: `${profile['weekly_goals_completed'] ? profile['weekly_goals_completed'] : 'None'}`, inline: true});
-        fields.push({ name: 'Monthly Goals Completed', value: `${profile['monthly_goals_completed'] ? profile['monthly_goals_completed'] : 'None'}`, inline: true});
-        fields.push({ name: 'Yearly Goals Completed', value: `${profile['yearly_goals_completed'] ? profile['yearly_goals_completed'] : 'None'}`, inline: true});
+        fields.push({ name: 'Words Written', value: `${profile['words'] ? profile['words'] : '0'}`, inline: true});
+        fields.push({ name: 'Words Written in Sprints', value: `${profile['words_sprints'] ? profile['words_sprints'] : '0'}`, inline: true});
+        fields.push({ name: 'Sprints Started', value: `${profile['sprints_started'] ? profile['sprints_started'] : '0'}`, inline: true});
+        fields.push({ name: 'Sprints Completed', value: `${profile['sprints_completed'] ? profile['sprints_completed']: '0'}`, inline: true});
+        fields.push({ name: 'Sprints Won', value: `${profile['sprints_won'] ? profile['sprints_won'] : '0'}`, inline: true});
+        fields.push({ name: 'Challenges Completed', value: `${profile['challenges_completed'] ? profile['challenges_completed'] : '0'}`, inline: true});
+        fields.push({ name: 'Daily Goals Completed', value: `${profile['daily_goals_completed'] ? profile['daily_goals_completed'] : '0'}`, inline: true});
+        fields.push({ name: 'Weekly Goals Completed', value: `${profile['weekly_goals_completed'] ? profile['weekly_goals_completed'] : '0'}`, inline: true});
+        fields.push({ name: 'Monthly Goals Completed', value: `${profile['monthly_goals_completed'] ? profile['monthly_goals_completed'] : '0'}`, inline: true});
+        fields.push({ name: 'Yearly Goals Completed', value: `${profile['yearly_goals_completed'] ? profile['yearly_goals_completed'] : '0'}`, inline: true});
 
         // Build embedded message.
         const embed = new EmbeddedMessage(interaction.user)

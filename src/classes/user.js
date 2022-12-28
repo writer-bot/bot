@@ -161,11 +161,15 @@ class User {
      * @returns {Promise<string>}
      */
     async getXPBar() {
-        const xp = await this.getXP();
+        const record = await this.getXP();
 
-        if (xp) {
-            const goal = xp['xp'] + xp['next'];
-            return `**Level ${xp['lvl']}** (${xp['xp']}/${goal})`;
+        if (record) {
+            const level = record.getLevel();
+            const nextLevelXP = record.getNextLevelXP();
+            const xp = record['xp'];
+
+            const goal = xp + nextLevelXP;
+            return `**Level ${level}** (${xp}/${goal})`;
         }
         return 'None';
     }
