@@ -615,6 +615,25 @@ class User {
 
     }
 
+    /**
+     * Reset user's enitre stats, records, xp, etc...
+     */
+    async reset() {
+        await this._db.delete('user_challenges', {'user': this.id})
+        await this._db.delete('user_goals', {'user': this.id})
+        await this._db.delete('user_records', {'user': this.id})
+        await this._db.delete('user_stats', {'user': this.id})
+        await this._db.delete('user_xp', {'user': this.id})
+        await this._db.delete('projects', {'user': this.id})
+    }
+
+    /**
+     * Delete all the user's projects.
+     */
+    async resetProjects() {
+        await this._db.delete('projects', {'user': this.id})
+    }
+
 }
 
 module.exports = User;
