@@ -36,7 +36,7 @@ const Console = new ConsoleWriter();
         process.exit();
 
     } catch (err) {
-        Console.red('[ERROR] Cannot cannot to database: ' + err);
+        Console.red('[ERROR] Cannot connect to database: ' + err);
         process.exit();
     }
 

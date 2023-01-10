@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node ./src/cluster.js",
     "register": "node ./src/register.js",
-    "dev": "node ./src/register.js && node ./src/cluster.js"
+    "dev": "node ./src/register.js && node ./src/cluster.js",
+    "update": "node ./src/update.js"
   },
   "repository": {
     "type": "git",
