@@ -6,7 +6,7 @@ const logger = require('./utils/logger');
 const manager = new ClusterManager(
     path.join(__dirname, 'bot.js'),
     {
-        totalShards: (typeof process.env.SHARDS === 'auto') ? 'auto' : parseInt(process.env.SHARDS),
+        totalShards: (process.env.SHARDS === 'auto') ? 'auto' : parseInt(process.env.SHARDS),
         shardsPerClusters: 5,
         mode: 'process',
         token: process.env.TOKEN

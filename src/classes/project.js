@@ -3,7 +3,7 @@ const EmbeddedMessage = require('./embed');
 
 class Project {
 
-    static MAX_MESSAGE_LENGTH = 2500;
+    static MAX_FIELDS = 25;
 
     static GENRES = {
         'academic': {'name': 'Academic', 'emote': ':books:'},
@@ -243,7 +243,6 @@ class Project {
         // Build an embedded message for the response.
         let all_fields = [];
         let fields = [];
-        let length = 0;
 
         for (let project of projects) {
 
@@ -267,15 +266,12 @@ class Project {
                 description = 'No description yet';
             }
 
-            length += title.length + description.length;
-
-            // If we've hit the character limit, send these fields to the array to send in the next embedded message.
-            if (length > Project.MAX_MESSAGE_LENGTH) {
+            // If we've hit the field limit, send these fields to the array to send in the next embedded message.
+            if (fields.length >= Project.MAX_FIELDS) {
 
                 // Add current stack of fields into the all_fields array and then reset.
                 all_fields.push(fields);
                 fields = [];
-                length = 0;
 
             }
 
@@ -302,9 +298,11 @@ class Project {
                     fields: split_fields,
                 });
 
-            return await interaction.followUp({embeds: [embed], ephemeral: true});
+            await interaction.followUp({embeds: [embed], ephemeral: true});
 
         }
+
+        return;
 
     }
 
