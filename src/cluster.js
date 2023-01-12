@@ -1,12 +1,12 @@
 require('dotenv').config();
-const Cluster = require('discord-hybrid-sharding');
+const { ClusterManager } = require('discord-hybrid-sharding');
 const path = require("node:path");
 const logger = require('./utils/logger');
 
-const manager = new Cluster.Manager(
+const manager = new ClusterManager(
     path.join(__dirname, 'bot.js'),
     {
-        totalShards: (typeof process.env.SHARDS === 'auto') ? process.env.SHARDS : parseInt(process.env.SHARDS),
+        totalShards: (typeof process.env.SHARDS === 'auto') ? 'auto' : parseInt(process.env.SHARDS),
         shardsPerClusters: 5,
         mode: 'process',
         token: process.env.TOKEN

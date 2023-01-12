@@ -454,8 +454,10 @@ class Sprint {
         // Then get the IDs of the users who want to be notified of sprints on this server.
         const notify_users = await this._db.get_all('user_settings', {'guild': this.guild, 'setting': 'sprint_notify', 'value': 1});
         let notify_ids = [];
-        for (const notify_user of notify_users) {
-            notify_ids.push(notify_user.user);
+        if (notify_users) {
+            for (const notify_user of notify_users) {
+                notify_ids.push(notify_user.user);
+            }
         }
 
         // Return the users who want notifications, but who are not already on the sprint.

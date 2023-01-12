@@ -1,12 +1,12 @@
-const Cluster = require('discord-hybrid-sharding');
+const { ClusterClient, getInfo } = require('discord-hybrid-sharding');
 const { Client, GatewayIntentBits } = require('discord.js');
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds],
-    shards: Cluster.data.SHARD_LIST,
-    shardCount: Cluster.data.TOTAL_SHARDS
+    shards: getInfo().SHARD_LIST,
+    shardCount: getInfo().TOTAL_SHARDS
 });
 
-client.cluster = new Cluster.Client(client);
+client.cluster = new ClusterClient(client);
 
 module.exports = client;

@@ -15,8 +15,11 @@ require('./utils/globals');
 client.commands = new Collection();
 require('./utils/commands')(client);
 
+client.READY = false;
+
 client.on('ready', () => {
     logger.info(`[CLUSTER ${client.cluster.id}] [LOGIN] ${client.user.tag} has logged in`);
+    client.READY = true;
 });
 
 client.on('interactionCreate', async interaction => {
@@ -29,6 +32,11 @@ client.on('interactionCreate', async interaction => {
     // Get the command based on its name.
     const command = client.commands.get(interaction.commandName);
     if (!command) {
+        return;
+    }
+
+    // If the client isn't ready, don't try to do anything.
+    if (!client.READY) {
         return;
     }
 
