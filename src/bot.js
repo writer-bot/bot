@@ -63,19 +63,21 @@ client.on('interactionCreate', async interaction => {
 
     } catch (err) {
 
-        logger.error(`Error running command ${interaction.commandName}`, {
+        logger.error(`Error running command: ${interaction.commandName}`, {
             uuid: uid,
             stack: err.stack
         })
 
-        await interaction.reply({
-            content: 'There was an error while executing this command!',
+        await interaction.followUp({
+            content: 'There was an error while executing this command!\n' +
+                'If it persists, please ask for help on the support server: ' + process.env.SUPPORT_SERVER + '\n' +
+                'Your error code to quote is: `' + uid + '`',
             ephemeral: true
         });
 
     }
 
-})
+});
 
 // Login to the API.
 client.login(process.env.TOKEN).then(() => {
@@ -97,4 +99,14 @@ client.login(process.env.TOKEN).then(() => {
 
     }
 
+});
+
+process.on("unhandledRejection", async (reason, p) => {
+    return;
+});
+process.on("uncaughtException", async (err, origin) => {
+    return;
+});
+process.on("uncaughtExceptionMonitor", async (err, origin) => {
+    return;
 });
