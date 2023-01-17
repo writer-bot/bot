@@ -32,6 +32,24 @@ const Console = new ConsoleWriter();
             Console.red('[DB] Cannot install database table: ' + err);
         }
 
+        Console.yellow('[DB] Running database updates');
+
+        try {
+
+            const updates_path = path.join(__dirname, 'data', 'updates');
+            for (const file of fs.readdirSync(updates_path).filter(file => file.endsWith('.sql'))) {
+                const file_path = path.join(updates_path, file);
+                const query = await readFile(file_path, 'utf-8');
+                await db.execute(query);
+                Console.write('[DB] Ran  ' + file);
+            }
+
+            Console.green('[DB] Finished database updates');
+
+        } catch (err) {
+            Console.red('[DB] Cannot run database update: ' + err);
+        }
+
         await db.end();
         process.exit();
 

@@ -1,0 +1,1 @@
+alter table sprint_users modify user varchar(255) not null;

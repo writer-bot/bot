@@ -644,7 +644,7 @@ class Sprint {
         if (sprint && sprint.isFinished() && await sprint.isDeclarationFinished()) {
 
             // Mark the sprint as completed.
-            await sprint.complete();
+            await sprint.complete_sprint();
 
             // Reload the sprint object.
             sprint = await Sprint.load(interaction.guildId, db);

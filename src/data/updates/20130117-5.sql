@@ -1,0 +1,1 @@
+alter table sprints modify guild varchar(255) not null;

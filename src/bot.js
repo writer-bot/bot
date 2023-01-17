@@ -94,7 +94,7 @@ client.login(process.env.TOKEN).then(() => {
         // Start the main task.
         client.task = {
             last: 0,
-            interval: setInterval(() => cron(client), 5000),
+            interval: setInterval(() => cron(client), (process.env.TASK_TIMER * 1000)),
         };
 
     }

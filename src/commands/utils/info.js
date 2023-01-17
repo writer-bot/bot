@@ -46,8 +46,8 @@ module.exports = {
             let stats = [];
             stats.push(`- Total Servers: ${results[0].reduce((acc, guildCount) => acc + guildCount, 0)}`);
             stats.push(`- Total Users: ${results[1].reduce((acc, memberCount) => acc + memberCount, 0)}`);
-            stats.push(`- Total Active Sprints: ${parseInt(active_sprints.cnt)}`);
-            stats.push(`- Total Completed Sprints: ${parseInt(completed_sprints.cnt)}`);
+            stats.push(`- Total Active Sprints: ${active_sprints.cnt.toLocaleString()}`);
+            stats.push(`- Total Completed Sprints: ${completed_sprints.cnt.toLocaleString()}`);
             fields.push({ name: 'General Statistics', value: stats.join("\n") });
 
             // Build embedded message with bot info.
