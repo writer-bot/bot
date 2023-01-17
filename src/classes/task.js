@@ -1,8 +1,6 @@
-const Goal = require('./goal');
 const logger = require('./../utils/logger');
 const DB = require('./database');
 const Helper = require('../classes/helper');
-const task = require("../tasks/goal");
 
 class Task {
 
@@ -165,7 +163,12 @@ class Task {
         logger.info('[TASK] Setting up scheduled tasks');
 
         // Set up the goal tasks, to reset goals for users.
+        const Goal = require('./goal');
         await Goal.setupTasks(db);
+
+        // Set up sprint rubbish collection task.
+        const Sprint = require('./sprint');
+        await Sprint.setupTasks(db);
 
         // Close database connection.
         await db.end();

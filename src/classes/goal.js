@@ -19,7 +19,7 @@ class Goal {
      */
     static async setupTasks(db) {
 
-        logger.info('[TASK][GOAL] Setting up records');
+        logger.info('[TASK][GOAL] Setting up jobs');
 
         // Start off by deleting the existing goal task.
         await db.delete('tasks', {'object': 'goal', 'type': 'reset'});

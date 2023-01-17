@@ -5,6 +5,39 @@ const logger = require('./../utils/logger');
 
 const func = async (client, db, task) => {
 
+    // Rubbish collection - Clear out old sprint_user records to keep database size down and help performance of queries.
+    if (task.type === 'rc') {
+
+        const cutoff = Helper.getUnixTimestamp() - (Sprint.RUBBISH_COLLECTION * 86400);
+
+        logger.info('[TASK]['+task.object+']['+task.type+'] Searching for sprint_users records created before ' + cutoff);
+
+        const query = `
+            SELECT su.id
+            FROM sprint_users su
+            JOIN sprints s ON s.id = su.sprint
+            WHERE s.created <= ?`;
+
+        const records = await db.get_all_sql(query, [cutoff]);
+
+        logger.info('[TASK]['+task.object+']['+task.type+'] Found ' + (records ? records.length : 0) + ' sprint_users to delete');
+
+        if (records) {
+
+            await db.execute(`
+                DELETE FROM sprint_users WHERE id IN (
+                    ${query}
+                )
+            `, [cutoff]);
+
+        }
+
+        logger.info('[TASK]['+task.object+']['+task.type+'] Deleted all sprint_users records identified for rubbish collection');
+
+        return true;
+
+    }
+
     // Get the sprint object we are using.
     const sprint = await Sprint.get(db, task.objectid);
 

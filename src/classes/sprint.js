@@ -5,6 +5,7 @@ const Guild = require('./guild');
 const Task = require('./task');
 const Experience = require('./experience');
 const Project = require("./project");
+const logger = require("../utils/logger");
 
 class Sprint {
 
@@ -15,6 +16,12 @@ class Sprint {
     static DEFAULT_IN_MINS = 2;
     static MAX_IN_MINS = 1440;
     static DEFAULT_MAX_WPM = 150;
+
+    // This is how many days sprint_users records will be kept after the sprint is created.
+    static RUBBISH_COLLECTION = 30;
+
+    // This is how many seconds between job runs. (24 hours).
+    static RUBBISH_COLLECTION_TASK = 86400;
 
     /**
      * Construct the sprint object from its DB record
@@ -1248,6 +1255,23 @@ class Sprint {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Set up the global task records
+     * @param db
+     * @returns {Promise<void>}
+     */
+    static async setupTasks(db) {
+
+        logger.info('[TASK][SPRINT] Setting up jobs');
+
+        // Start off by deleting the existing goal task.
+        await db.delete('tasks', {'object': 'sprint', 'type': 'rc'});
+
+        // Now re-create it, with default values, so we know it will run at correct time.
+        await db.insert('tasks', {'object': 'sprint', 'time': 0, 'type': 'rc', 'recurring': 1, 'runeveryseconds': Sprint.RUBBISH_COLLECTION_TASK});
+
     }
 
 }
