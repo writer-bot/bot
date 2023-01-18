@@ -262,7 +262,7 @@ module.exports = {
             return await Project.command_view(interaction, db, user, code, is_public);
         } else if (subCommand === 'list') {
             const genre = interaction.options.getString('genre');
-            const status = interaction.options.getBoolean('status');
+            const status = interaction.options.getString('status');
             return await Project.command_list(interaction, db, user, genre, status);
         }
 
