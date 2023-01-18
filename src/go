@@ -9,3 +9,6 @@ pm2 delete Bot
 
 # Now run the application.
 pm2 start npm --name Bot -- start
+
+# Keep container alive.
+bash
