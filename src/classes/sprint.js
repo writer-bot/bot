@@ -367,6 +367,7 @@ class Sprint {
 
         // How long do they have to submit their word counts?
         const guild = new Guild(this.guild, this._db);
+
         let delay = await guild.getSetting('sprint_delay_end');
         if (delay) {
             delay = parseInt(delay.value);
@@ -782,6 +783,14 @@ class Sprint {
             message += `${user.getMention()}, your current word count is: **${record.current_wc}** (**${written}** words in this sprint so far).\n`;
         }
 
+        // Are they sprinting in a project?
+        if (record.project !== null) {
+            const project = await Project.get_by_id(db, record.project);
+            if (project) {
+                message += `You are sprinting in your project **${project.name}**.\n`;
+            }
+        }
+
         // If the sprint hasn't started, show the time until it does.
         if (!sprint.hasStarted()) {
             const left = Helper.formatSecondsToDays(parseInt(sprint.start) - now);
@@ -931,6 +940,11 @@ class Sprint {
             initial = last_sprint.ending_wc;
             project_id = last_sprint.project;
             type = last_sprint.sprint_type;
+
+            // If they are sprinting in the same project as before, load that so we can get its name.
+            if (project_id !== null) {
+                project = await Project.get_by_id(db, project_id);
+            }
 
         }
 

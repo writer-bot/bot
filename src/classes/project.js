@@ -466,8 +466,7 @@ class Project {
     /**
      * Get a project record based on ID
      * @param db
-     * @param user_id
-     * @param shortcode
+     * @param id
      * @returns {Promise<*|boolean>}
      */
     static async get_by_id(db, id) {
