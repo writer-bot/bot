@@ -20,7 +20,7 @@ const func = async (client, db, task) => {
 
         const records = await db.get_all_sql(query, [cutoff]);
 
-        logger.info('[TASK]['+task.object+']['+task.type+'] Found ' + (records ? records.length : 0) + ' sprint_users to delete');
+        logger.info('[TASK]['+task.object+']['+task.type+'] Found ' + (records ? records.length : 0) + ' sprint_users records to delete');
 
         if (records) {
 

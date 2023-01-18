@@ -3,5 +3,9 @@
 # Install pm2 if it is not installed already.
 npm install -g pm2
 
+# Remove any previously running processes.
+pm2 stop Bot
+pm2 delete Bot
+
 # Now run the application.
 pm2 start npm --name Bot -- start
