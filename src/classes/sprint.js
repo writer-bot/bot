@@ -381,7 +381,7 @@ class Sprint {
 
         // If everyone is declared, just finish without waiting.
         if (await this.isDeclarationFinished()) {
-            return await this.complete_sprint(interaction);
+            return await this.complete_sprint(interaction, client);
         }
 
         // Schedule a task to complete the sprint.
@@ -776,7 +776,7 @@ class Sprint {
         let message = '';
 
         // If they are sprinting without a word count, don't need to display the word count.
-        if (record.type === Sprint.TYPE_NO_WORDCOUNT) {
+        if (record.sprint_type === 'no-wordcount') {
             message += `${user.getMention()}, you are sprinting without a word count.\n`;
         } else {
             message += `${user.getMention()}, your current word count is: **${record.current_wc}** (**${written}** words in this sprint so far).\n`;
