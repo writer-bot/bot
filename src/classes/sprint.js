@@ -404,7 +404,9 @@ class Sprint {
 
         // Notify users.
         const notify = await this.getMentions(true);
-        message += `\n:bell: ${notify.join(', ')}`;
+        if (notify.length) {
+            message += `\n:bell: ${notify.join(', ')}`;
+        }
 
         return Helper.say(message, interaction, null);
 
@@ -424,12 +426,16 @@ class Sprint {
 
         // Notify users who joined the sprint that it is starting.
         const mentions = await this.getMentions();
-        message += `\n:bell: ${mentions.join(', ')}`;
+        if (mentions.length) {
+            message += `\n:bell: ${mentions.join(', ')}`;
+        }
 
         // Notify users who asked to be notified.
         if (immediate) {
             const notify = await this.getMentions(true);
-            message += `\n:bell: ${notify.join(', ')}`;
+            if (notify.length) {
+                message += `\n:bell: ${notify.join(', ')}`;
+            }
         }
 
         return Helper.say(message, interaction, client, this.channel);
