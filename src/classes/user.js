@@ -424,22 +424,24 @@ class User {
             'current': 0,
         };
 
+        const now = Helper.getUnixTimestamp();
         const goal = await this.getGoal(type);
         if (goal) {
 
             progress.exists = true;
             progress.percent = Math.floor((goal.current / goal.goal) * 100);
-            progress.done = Math.floor(progress.percent / 10);
-            progress.left = 10 - progress.done;
             progress.goal = goal.goal;
             progress.current = goal.current;
+            progress.time_left = Helper.formatSecondsToDays(parseInt(goal.reset) - now);
+            progress.remaining = progress.goal - progress.current;
 
-            if (progress.done > 10) {
-                progress.done = 10;
-            }
-
-            if (progress.left < 0) {
-                progress.left = 0;
+            // If they've gone over their goal, just set it as 0 remaining.
+            if (progress.remaining < 0) {
+                progress.remaining = 0;
+                progress.daily_rate = 0;
+            } else {
+                // Work out daily word count required to meet goal.
+                progress.daily_rate = Math.ceil(progress.remaining / ((parseInt(goal.reset) - now) / 86400));
             }
 
         }

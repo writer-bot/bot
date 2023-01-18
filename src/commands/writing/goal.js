@@ -217,10 +217,13 @@ module.exports = {
 
                         text += `Your ${type} goal is to write **${progress.goal}** words.\n`;
                         text += `You are **${progress.percent}%** of the way to your ${type} goal. (${progress.current}/${progress.goal})\n`;
-                        // TODO: Time till reset.
+                        text += `Approx ${progress.time_left} until ${type} goal reset.\n`;
 
-                        // Have they met the goal?
-                        if ( (progress.goal - progress.current) <= 0 ) {
+                        // Show average rate needed to reach goal.
+                        if (type !== 'daily' && progress.remaining > 0) {
+                            text += `If you write approx ${progress.daily_rate} words per day, you should meet your ${type} goal!\n`;
+                        } else if ( progress.remaining <= 0 ) {
+                            // They met their goal.
                             text += `You have met your ${type} goal of ${progress.goal} words!\n`;
                         }
 

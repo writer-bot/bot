@@ -9,7 +9,7 @@ class Goal {
         'yearly': 'Yearly',
     };
 
-    // Task will run and check goals every 5 minutes.
+    // Task will run and check goals every 15 minutes.
     static TASK_RESET_TIME = 15 * 60;
 
     /**
