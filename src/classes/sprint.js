@@ -31,7 +31,7 @@ class Sprint {
     constructor(record, db) {
         this._db = db;
         this.id = record.id;
-        this.guild = parseInt(record.guild);
+        this.guild = record.guild;
         this.channel = record.channel;
         this.start = parseInt(record.start);
         this.end = parseInt(record.end);
@@ -999,7 +999,7 @@ class Sprint {
         }
 
         // Do they have permission to cancel this sprint? (Sprint creator or MANAGE_MESSAGES permission).
-        if (parseInt(sprint.createdby) !== parseInt(user.id) && !interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+        if (sprint.createdby !== user.id && !interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
             return await interaction.editReply(`${user.getMention()}, you do not have permission to cancel this sprint.`);
         }
 
