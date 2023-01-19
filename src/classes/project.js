@@ -530,7 +530,7 @@ class Project {
             where['status'] = status;
         }
 
-        const records = await db.get_all('projects', where);
+        const records = await db.get_all('projects', where, ['*'], ['name']);
         if (records) {
             for (const record of records) {
                 results.push(new Project(db, record));
