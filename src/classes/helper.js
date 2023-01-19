@@ -129,6 +129,16 @@ class Helper {
         }
     }
 
+    /**
+     * Truncate a string and add ellipsis at the end, for cutting long strings down
+     * @param input
+     * @param length
+     * @returns {string|*}
+     */
+    static truncate(input, length) {
+        return (input.length > length) ? `${input.substring(0, length)}...` : input;
+    }
+
 }
 
 module.exports = Helper;

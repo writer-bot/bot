@@ -129,8 +129,8 @@ class Project {
             : '-';
 
         let fields = [];
-        fields.push({ name: 'Status', value: genre, inline: true });
-        fields.push({ name: 'Genre', value: status, inline: true });
+        fields.push({ name: 'Status', value: status, inline: true });
+        fields.push({ name: 'Genre', value: genre, inline: true });
         fields.push({ name: 'Word Count', value: this.words.toLocaleString(), inline: true });
 
         return new EmbeddedMessage(interaction.user)
@@ -258,7 +258,7 @@ class Project {
             }
 
             if (project.description !== null) {
-                description += `\n_${project.description}_\n`;
+                description += '\n_' + Helper.truncate(project.description, 100) + '_\n';
             }
 
             // No description or status/genre.
