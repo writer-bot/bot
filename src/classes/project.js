@@ -77,6 +77,11 @@ class Project {
      */
     async save() {
 
+        // If we are marking the project as Published/Finished for the first time, set it to completed.
+        if ((this.status === 'finished' || this.status === 'published') && !this.isComplete()) {
+            this.completed = Helper.getUnixTimestamp();
+        }
+
         return await this._db.update('projects', {
             'id': this.id,
             'user': this.user,
@@ -99,6 +104,14 @@ class Project {
      */
     is_valid() {
         return (this.id !== false);
+    }
+
+    /**
+     * Check if the project has been completed.
+     * @returns {boolean}
+     */
+    isComplete() {
+        return (this.completed > 0);
     }
 
     /**
@@ -395,6 +408,7 @@ class Project {
 
             const code = interaction.options.getString('shortcode');
             const field = interaction.options.getString(subCommand);
+            let message = `Project (**${code}**) ${subCommand} updated.`;
 
             // Do they have a project with that code?
             const project = await Project.get(db, user.id, code);
@@ -416,11 +430,18 @@ class Project {
                 return await interaction.editReply(`Description is too long. Please shorten it to less than 4096 characters.`);
             }
 
+            // If we are changing the status to Published or Finished for the first time, apply XP.
+            if (subCommand === 'status' && (field === 'finished' || field === 'published') && !project.isComplete()) {
+                const xp = Math.max(10, Math.min(Math.ceil(project.words / 100), 5000) );
+                await user.addXP(xp);
+                message += `    +${xp} xp!`;
+            }
+
             // Change the project field.
             project[subCommand] = field;
             await project.save();
 
-            return await interaction.editReply(`Project (**${code}**) ${subCommand} updated.`);
+            return await interaction.editReply(message);
 
         }
 
