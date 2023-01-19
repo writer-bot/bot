@@ -249,6 +249,9 @@ class Sprint {
                     await user.addStat('sprints_words_written', word_count);
                     await user.addStat('total_words_written', word_count);
 
+                    // Add words written to goal.
+                    await user.addToGoals(word_count);
+
                     // If they were sprinting in a project, update its word count.
                     if (user_sprint.project !== null) {
                         const project = await Project.get_by_id(this._db, user_sprint.project);
