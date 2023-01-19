@@ -150,7 +150,7 @@ class Project {
             .build({
                 title: this.name,
                 url: url,
-                description: desc,
+                description: Helper.truncate(desc, 4000),
                 fields: fields,
                 image: image,
             });
@@ -233,7 +233,7 @@ class Project {
      * @param status
      * @returns {Promise<Message<BooleanCache<CacheType>>>}
      */
-    static async command_list(interaction, db, user, genre, status) {
+    static async command_list(interaction, db, user, genre, status, is_public) {
 
         // This filters array is just used for display at the end.
         const filters = [];
@@ -263,15 +263,21 @@ class Project {
             let description = '';
 
             if (project.genre !== null && Project.GENRES[project.genre] !== undefined) {
-                description += Project.GENRES[project.genre].emote + ' ';
+                description += Project.GENRES[project.genre].emote + ' ' + Project.GENRES[project.genre].name + ' ---- ';
             }
 
             if (project.status !== null && Project.STATUSES[project.status] !== undefined) {
-                description += Project.STATUSES[project.status].emote + ' ';
+                description += Project.STATUSES[project.status].emote + ' ' + Project.STATUSES[project.status].name + ' ---- ';
             }
+
+            description += ':keyboard: ' + project.words.toLocaleString();
 
             if (project.description !== null) {
                 description += '\n_' + Helper.truncate(project.description, 100) + '_\n';
+            }
+
+            if (project.link !== null) {
+                description += project.link;
             }
 
             // No description or status/genre.
@@ -311,7 +317,7 @@ class Project {
                     fields: split_fields,
                 });
 
-            await interaction.followUp({embeds: [embed], ephemeral: true});
+            await interaction.followUp({embeds: [embed], ephemeral: !is_public});
 
         }
 

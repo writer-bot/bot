@@ -89,7 +89,11 @@ module.exports = {
 
                     return option;
                 })
-
+                .addBooleanOption((option) =>
+                    option.setName('public')
+                        .setDescription('Should the information be viewable by everyone else in the channel? (Default: no)')
+                        .setRequired(false)
+                )
         )
         .addSubcommandGroup((group_edit) => {
             group_edit
@@ -263,7 +267,8 @@ module.exports = {
         } else if (subCommand === 'list') {
             const genre = interaction.options.getString('genre');
             const status = interaction.options.getString('status');
-            return await Project.command_list(interaction, db, user, genre, status);
+            const is_public = interaction.options.getBoolean('public');
+            return await Project.command_list(interaction, db, user, genre, status, is_public);
         }
 
     }
