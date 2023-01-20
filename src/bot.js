@@ -48,12 +48,12 @@ client.on('interactionCreate', async interaction => {
         uuid: uid
     });
 
+    // Create database connection to use in command.
+    const db = new DB();
+    await db.connect();
+
     // Try and execute the command.
     try {
-
-        // Create database connection to use in command.
-        const db = new DB();
-        await db.connect();
 
         // Execute the command.
         await command.execute(interaction, client, db);
@@ -62,6 +62,9 @@ client.on('interactionCreate', async interaction => {
         await db.end();
 
     } catch (err) {
+
+        // Close database connection and free up pool slot.
+        await db.end();
 
         logger.error(`Error running command: ${interaction.commandName}`, {
             uuid: uid,
