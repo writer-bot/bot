@@ -150,7 +150,7 @@ class Project {
             .build({
                 title: this.name,
                 url: url,
-                description: Helper.truncate(desc, 4000),
+                description: (desc !== null) ? Helper.truncate(desc, 4000) : null,
                 fields: fields,
                 image: image,
             });
