@@ -20,8 +20,6 @@ const func = async (client, db, task) => {
 
         const records = await db.get_all_sql(query, [cutoff]);
 
-        logger.info('[TASK]['+task.object+']['+task.type+'] Found ' + (records ? records.length : 0) + ' sprint_users records to delete');
-
         if (records) {
 
             await db.execute(`
@@ -32,7 +30,29 @@ const func = async (client, db, task) => {
 
         }
 
-        logger.info('[TASK]['+task.object+']['+task.type+'] Deleted all sprint_users records identified for rubbish collection');
+        logger.info('[TASK]['+task.object+']['+task.type+'] Deleted ' + (records ? records.length : 0) + ' sprint_users records identified for rubbish collection');
+
+        // Now clean up old sprint which never got finished properly.
+        logger.info('[TASK]['+task.object+']['+task.type+'] Searching for old unfinished sprints to delete');
+
+        const one_day_ago = Helper.getUnixTimestamp() - 86400;
+        const old_sprints = await db.get_all_sql('SELECT id FROM sprints WHERE completed = 0 AND end <= ?', [one_day_ago]);
+
+        if (old_sprints) {
+
+            for (const old_sprint of old_sprints) {
+
+                // Remove the sprint.
+                await db.delete('sprints', {'id': old_sprint.id});
+
+                // Remove any sprint user records associated with it.
+                await db.delete('sprint_users', {'sprint': old_sprint.id});
+
+            }
+
+        }
+
+        logger.info('[TASK]['+task.object+']['+task.type+'] Deleted ' + (old_sprints ? old_sprints.length : 0) + ' old unfinished sprints identified for rubbish collection');
 
         return true;
 
