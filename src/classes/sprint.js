@@ -451,11 +451,16 @@ class Sprint {
      * @returns {Promise<{length}|*|boolean>}
      */
     async getUsers() {
+
         const users = await this._db.get_all('sprint_users', {'sprint': this.id}, ['user']);
         let user_ids = [];
-        for (const user of users) {
-            user_ids.push(user.user);
+
+        if (users) {
+            for (const user of users) {
+                user_ids.push(user.user);
+            }
         }
+
         return user_ids;
     }
 
@@ -738,7 +743,7 @@ class Sprint {
 
         // If there are no more users sprinting, cancel it.
         const users = await sprint.getUsers();
-        if (!users) {
+        if (!users.length) {
 
             await sprint.cancel();
             await interaction.followUp(`**Sprint has been cancelled**\nEverybody left and I'm not doing this alone.`);
@@ -762,19 +767,31 @@ class Sprint {
             return;
         }
 
-        // Make sure the user is sprinting.
-        if (!await this.commonIsSprintingChecks(interaction, sprint, user)) {
-            return;
+        const now = Helper.getUnixTimestamp();
+        const left = Helper.formatSecondsToDays((parseInt(sprint.end) - now));
+
+        // If they aren't in the sprint, just show time left.
+        if (!await sprint.isUserSprinting(user.id)) {
+
+            // If the sprint hasn't started, show the time until it does.
+            if (!sprint.hasStarted()) {
+                const left = Helper.formatSecondsToDays(parseInt(sprint.start) - now);
+                return await interaction.editReply(`The sprint will begin in **${left}**\n`);
+            } else if (sprint.isFinished()) {
+                // If it's finished, display that message.
+                return await interaction.editReply('Sprint has finished. Waiting for final word counts.\n');
+            } else {
+                return await interaction.editReply(`There are **${left}** left until this sprint ends.\n`);
+            }
+
         }
 
         const record = await sprint.getUser(user.id);
 
         // Build values to be passed to status message.
-        const now = Helper.getUnixTimestamp();
         const written = record.current_wc - record.starting_wc;
         const writing_seconds = (now - parseInt(record.timejoined));
         const writing_time = Helper.formatSecondsToDays(writing_seconds);
-        const left = Helper.formatSecondsToDays((parseInt(sprint.end) - now));
         const wpm = sprint.calculateWPM(written, writing_seconds);
 
         let message = '';
