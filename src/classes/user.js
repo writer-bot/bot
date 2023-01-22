@@ -283,13 +283,13 @@ class User {
         // Get the user's datetime offset from the server.
         const setting = await this.getSetting('datetime');
         if (setting) {
-            offset = parseInt(setting.value);
+            // We have to reverse the offset, because if they are behind, we want to go ahead, not behind more.
+            offset = -parseInt(setting.value);
         }
 
         // To start with, get next midnight in server time (UTC).
         const server_time = moment();
         let server_midnight;
-
 
         // Now, change it depending on the goal type.
         if (type === 'weekly') {
