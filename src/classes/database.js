@@ -50,8 +50,15 @@ class DB {
 
             let where_sql = [];
             for (let key in where) {
-                where_sql.push(key + ' = ?');
-                params.push(where[key]);
+
+                // If the value is NULL, we want to change to "IS" not "=".
+                if (where[key] === null) {
+                    where_sql.push(key + ' IS NULL');
+                } else {
+                    where_sql.push(key + ' = ?');
+                    params.push(where[key]);
+                }
+
             }
 
             sql += where_sql.join(' AND ');
@@ -102,14 +109,21 @@ class DB {
      */
     async _build_delete(table, params) {
 
-        let sql_params = Object.values(params);
-        let placeholders = Array(sql_params.length).fill('?');
+        let sql_params = [];
         let sql = '';
         sql += 'DELETE FROM ' + table + ' WHERE ';
 
         let where_sql = [];
         for (let key in params) {
-            where_sql.push(key + ' = ?');
+
+            // If the value is NULL, we want to change to "IS" not "=".
+            if (params[key] === null) {
+                where_sql.push(key + ' IS NULL');
+            } else {
+                where_sql.push(key + ' = ?');
+                sql_params.push(params[key]);
+            }
+
         }
         sql += where_sql.join(' AND ');
 
@@ -150,8 +164,15 @@ class DB {
 
             let where_sql = [];
             for (let key in where) {
-                where_sql.push(key + ' = ?');
-                sql_params.push(where[key]);
+
+                // If the value is NULL, we want to change to "IS" not "=".
+                if (where[key] === null) {
+                    where_sql.push(key + ' IS NULL');
+                } else {
+                    where_sql.push(key + ' = ?');
+                    sql_params.push(where[key]);
+                }
+
             }
 
             sql += where_sql.join(' AND ');
