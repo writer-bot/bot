@@ -27,7 +27,7 @@ class Generator {
     static MAX_RETRIES = 10;
     static SINGULAR = ['prompt', 'idea', 'quote'];
     static URLS = {
-        'face': 'https://thispersondoesnotexist.com/image',
+        'face': 'https://thispersondoesnotexist.com/',
     };
 
     /**
