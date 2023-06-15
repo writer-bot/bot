@@ -62,7 +62,7 @@ module.exports = {
         }
 
         const names = results['names'].join(join);
-        return await interaction.editReply(`${user.getMention()}, ${results['message']} ${names}`);
+        return await interaction.editReply(`${user.getMention()}, ${results['message']}${names}`);
 
     }
 

@@ -58,6 +58,11 @@ class Generator {
             amount = Generator.DEFAULT_AMOUNT;
         }
 
+        // Prompts is a max of 5, as otherwise it can go over 2000 characters.
+        if (this.type === 'prompt') {
+            amount = 5;
+        }
+
         const file = 'gen_' + this.type;
         const source = Helper.getJSONAsset(file);
         let retry_attempts = 0;
@@ -82,6 +87,7 @@ class Generator {
 
                 // Generate a name.
                 let name = this.replace(choices, format);
+                name = name.trim();
 
                 // If we've already had this exact one, try again.
                 if (names.includes(name) && retry_attempts < Generator.MAX_RETRIES) {
