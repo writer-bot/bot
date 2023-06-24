@@ -11,6 +11,10 @@ class EmbeddedMessage {
     }
 
     build({title, description = null, colour = Colors.Blue, url = null, fields = [], image = null}) {
+        let author = `${this.user.username}#${this.user.discriminator}`;
+        if (this.user.discriminator == '0') {
+            author = `${this.user.username}`;
+        }
 
         return new EmbedBuilder()
             .setColor(colour)
@@ -20,7 +24,7 @@ class EmbeddedMessage {
             .addFields(fields)
             .setThumbnail(image)
             .setFooter({
-                text: `Requested by ${this.user.username}#${this.user.discriminator}`,
+                text: `Requested by ${author}`,
                 iconURL: this.user.avatarURL()
             });
 
