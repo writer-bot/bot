@@ -90,8 +90,8 @@ module.exports = {
                     return option;
                 })
                 .addBooleanOption((option) =>
-                    option.setName('public')
-                        .setDescription('Should the information be viewable by everyone else in the channel? (Default: no)')
+                    option.setName('hidden')
+                        .setDescription('Should the information be hidden and only viewable by you? (Default: no)')
                         .setRequired(false)
                 )
         )
@@ -262,12 +262,12 @@ module.exports = {
             return await Project.command_update(interaction, db, user, code, words);
         } else if (subCommand === 'view') {
             const code = interaction.options.getString('shortcode');
-            const is_public = interaction.options.getBoolean('public');
+            const is_public = !interaction.options.getBoolean('hidden');
             return await Project.command_view(interaction, db, user, code, is_public);
         } else if (subCommand === 'list') {
             const genre = interaction.options.getString('genre');
             const status = interaction.options.getString('status');
-            const is_public = interaction.options.getBoolean('public');
+            const is_public = !interaction.options.getBoolean('hidden');
             return await Project.command_list(interaction, db, user, genre, status, is_public);
         }
 
