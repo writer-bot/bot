@@ -33,19 +33,23 @@ module.exports = {
 
         // User stats.
         let stats = await db.get_all('user_stats', {'user': user.id});
-        for (let stat of stats) {
-            json['stats'].push({
-                "name": stat.name,
-                "value": stat.value
-            });
+        if (stats) {
+            for (let stat of stats) {
+                json['stats'].push({
+                    "name": stat.name,
+                    "value": stat.value
+                });
+            }
         }
 
         let records = await db.get_all('user_records', {'user': user.id});
-        for (let record of records) {
-            json['stats'].push({
-                "record": record.record,
-                "value": record.value
-            });
+        if (records) {
+            for (let record of records) {
+                json['stats'].push({
+                    "record": record.record,
+                    "value": record.value
+                });
+            }
         }
 
         // User XP.
@@ -53,29 +57,33 @@ module.exports = {
 
         // User projects.
         let projects = await db.get_all('projects', {'user': user.id});
-        for (let project of projects) {
-            json['projects'].push({
-                "name": project.name,
-                "shortname": project.shortname,
-                "words": project.words,
-                "completed": project.completed.toString(),
-                "status": project.status,
-                "genre": project.genre,
-                "description": project.description,
-                "link": project.link,
-                "image": project.image
-            });
+        if (projects) {
+            for (let project of projects) {
+                json['projects'].push({
+                    "name": project.name,
+                    "shortname": project.shortname,
+                    "words": project.words,
+                    "completed": project.completed.toString(),
+                    "status": project.status,
+                    "genre": project.genre,
+                    "description": project.description,
+                    "link": project.link,
+                    "image": project.image
+                });
+            }
         }
 
         // User goals.
         let goals = await db.get_all('user_goals', {'user': user.id});
-        for (let goal of goals) {
-            json['goals'].push({
-                "type": goal.type,
-                "goal": goal.goal,
-                "current": goal.current,
-                "completed": goal.completed.toString()
-            });
+        if (goals) {
+            for (let goal of goals) {
+                json['goals'].push({
+                    "type": goal.type,
+                    "goal": goal.goal,
+                    "current": goal.current,
+                    "completed": goal.completed.toString()
+                });
+            }
         }
 
         let content = JSON.stringify(json);
