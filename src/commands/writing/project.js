@@ -229,6 +229,68 @@ module.exports = {
                 })
 
             return group_edit;
+        })
+        .addSubcommandGroup((group_unset)=>{
+            group_unset
+                .setName('unset')
+                .setDescription('Unset project\'s details')
+                .addSubcommand((unset_desc)=>{
+                    unset_desc
+                        .setName('description')
+                        .setDescription('Removes the description of a project')
+                        .addStringOption((option)=>
+                            option.setName('shortcode')
+                                .setDescription('The shortcode of the project')
+                                .setRequired(true)
+                        );
+                    return unset_desc;
+                })
+                .addSubcommand((unset_genre)=>{
+                    unset_genre
+                        .setName('genre')
+                        .setDescription('Removes the genre of a project')
+                        .addStringOption((option)=>
+                            option.setName('shortcode')
+                                .setDescription('The shortcode of the project')
+                                .setRequired(true)
+                        );
+                    return unset_genre;  
+                })
+                .addSubcommand((unset_status)=>{
+                    unset_status
+                        .setName('status')
+                        .setDescription('Removes the status of a project')
+                        .addStringOption((option)=>
+                            option.setName('shortcode')
+                                .setDescription('The shortcode of the project')
+                                .setRequired(true)
+                        );
+                    return unset_status;
+                })
+                .addSubcommand((unset_link)=>{
+                    unset_link
+                        .setName('link')
+                        .setDescription('Removes the links of a project')
+                        .addStringOption((option)=>
+                            option.setName('shortcode')
+                                .setDescription('The shortcode of the project')
+                                .setRequired(true)
+                        );
+                    return unset_link;
+                })
+                .addSubcommand((unset_image)=>{
+                    unset_image
+                        .setName('image')
+                        .setDescription('Removes the image of a project')
+                        .addStringOption((option)=>
+                            option.setName('shortcode')
+                                .setDescription('The shortcode of the project')
+                                .setRequired(true)
+                        );
+                    return unset_image;
+                })
+            
+            return group_unset;
         }),
 
     /**
@@ -269,6 +331,8 @@ module.exports = {
             const status = interaction.options.getString('status');
             const is_public = !interaction.options.getBoolean('hidden');
             return await Project.command_list(interaction, db, user, genre, status, is_public);
+        } else if (group === 'unset') {
+            return await Project.command_unset(interaction, db, user, subCommand);
         }
 
     }

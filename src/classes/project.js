@@ -453,6 +453,33 @@ class Project {
 
     }
 
+    /**
+     * Run a command from the project unset command group
+     * @param interaction
+     * @param db
+     * @param user
+     * @param subCommand
+     * @returns {Promise<void>}
+     */
+    static async command_unset(interaction, db, user, subcommand){
+
+        const code = interaction.options.getString('shortcode');
+        let message = `Project (**${code}**) ${subcommand} removed.`;
+
+        // Do they have a project with that code?
+        const project = await Project.get(db, user.id, code);
+        if (!project.is_valid()) {
+          return await interaction.editReply(`You do not have a project with that code (**${code}**).`);
+        }
+        
+        // Change the project field to empty.
+        project[subcommand] = null
+        await project.save();
+
+        return await interaction.editReply(message);
+
+    }
+
 
     /**
      * Create a project record
